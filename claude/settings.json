@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api repos/witchveronica88/wine/pulls -f title=*)",
+      "Bash(gh api -X PUT repos/witchveronica88/wine/pulls/* -f merge_method=merge*)"
+    ]
+  }
+}
