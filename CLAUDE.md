@@ -67,5 +67,9 @@ python3 -m http.server 8765   # then open http://localhost:8765/
 
 ## Font size
 
-- The base body text size is 16px. Never make body text smaller than 16px.
-- Use sizes below 16px only for secondary text such as dates, labels and captions.
+- Use exactly four font sizes, 16px base. Define them as tokens on `:root` and use only these tokens in `font-size` (never write px numbers directly).
+  - `--fs-xl` 24px: screen titles, big numbers
+  - `--fs-l` 18px: subheadings (section titles)
+  - `--fs-m` 16px: body text, inputs
+  - `--fs-s` 14px: secondary text (descriptions, notes, tables, tabs)
+- Do not add new sizes. After a change, check at 360px phone width that no horizontal scroll appears.
