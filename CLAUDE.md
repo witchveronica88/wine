@@ -65,11 +65,17 @@ python3 -m http.server 8765   # then open http://localhost:8765/
 
 `fetch` does not work from `file://`, so always use a local server.
 
-## Font size
+## Design rules (디자인 규칙)
 
-- Use exactly four font sizes, 16px base. Define them as tokens on `:root` and use only these tokens in `font-size` (never write px numbers directly).
-  - `--fs-xl` 24px: screen titles, big numbers
-  - `--fs-l` 18px: subheadings (section titles)
-  - `--fs-m` 16px: body text, inputs
-  - `--fs-s` 14px: secondary text (descriptions, notes, tables, tabs)
-- Do not add new sizes. After a change, check at 360px phone width that no horizontal scroll appears.
+Text uses exactly four sizes. They are defined as tokens on `:root` in `index.html`, and every `font-size` must use one of these tokens, never a raw px value:
+
+| token | size | use |
+| --- | --- | --- |
+| `--fs-xl` | 24px | screen titles, big numbers |
+| `--fs-l` | 18px | section headings |
+| `--fs-m` | 16px | body text, inputs (the base size; body text is never smaller) |
+| `--fs-s` | 14px | secondary text: captions, notes, tables, tabs, dates, labels |
+
+Pair each size with its line-height token (`--lh-xl`, `--lh-l`, `--lh-m`, `--lh-s`).
+
+Pages must not scroll sideways at a 360px phone width.
