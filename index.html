@@ -44,7 +44,10 @@
   --wine-dessert: #956f24;
   --wine-fortified: #684149;
   --photo-bg: #e7e3df;
+  --disclosure-bg: #e9f1f1; /* 펼친 제목 줄 배경 */
   --radius: 10px;
+  --card-radius: 16px;
+  --card-pad: 20px;
   --space-surface: var(--surface);
   --space-surface-alt: var(--surface-raised);
   --space-muted: var(--dim);
@@ -76,6 +79,7 @@
     --wine-dessert: #bd9340;
     --wine-fortified: #98646d;
     --photo-bg: #292d2f;
+    --disclosure-bg: #22302f;
   }
 }
 
@@ -801,55 +805,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .notes-intro p { margin: 0 0 3px; color: var(--accent); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 750; }
 .notes-intro h1 { margin: 0; font-size: var(--fs-xl); line-height: var(--lh-xl); letter-spacing: -.02em; }
 .notes-search { margin-bottom: 12px; }
-.notes-kinds {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-  margin-bottom: 24px;
-}
-.notes-kinds button {
-  min-width: 0;
-  min-height: 58px;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 5px;
-  padding: 10px 7px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--dim);
-  cursor: pointer;
-}
-.notes-kinds button span { font-size: var(--fs-s); font-weight: 750; white-space: nowrap; }
-.notes-kinds button strong { font-size: var(--fs-s); font-weight: 700; }
-.notes-kinds button.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
-.notes-results-heading { display: flex; align-items: baseline; gap: 7px; margin-bottom: 10px; }
-.notes-results-heading h2 { margin: 0; font-size: var(--fs-l); line-height: var(--lh-l); }
-.notes-results-heading span { color: var(--dim); font-size: var(--fs-s); }
-.notes-list { border-top: 1px solid var(--border); }
-.note-item { scroll-margin-top: calc(env(safe-area-inset-top) + 12px); border-bottom: 1px solid var(--border); }
-.note-summary {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 54px minmax(0, 1fr) 20px;
-  gap: 12px;
-  align-items: start;
-  padding: 16px 14px;
-  border: 0;
-  background: color-mix(in srgb, var(--border) 30%, var(--surface));
-  text-align: left;
-  cursor: pointer;
-}
-.note-summary:active { background: color-mix(in srgb, var(--border) 48%, var(--surface)); }
-.note-number { color: var(--accent); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 750; }
-.note-copy { min-width: 0; display: flex; flex-direction: column; }
-.note-copy strong { color: var(--text); font-size: var(--fs-l); line-height: var(--lh-l); overflow-wrap: anywhere; }
-.note-copy small { margin-top: 1px; color: var(--accent); font-size: var(--fs-s); line-height: var(--lh-s); overflow-wrap: anywhere; }
-.note-copy > span { margin-top: 5px; color: var(--dim); font-size: var(--fs-m); line-height: var(--lh-m); }
-.note-chevron { display: grid; place-items: center; height: 22px; color: var(--dim); transition: transform .18s ease; }
-.note-chevron svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.note-item.open .note-chevron { transform: rotate(180deg); }
 .note-pages { padding: 0; }
 .note-pages img {
   display: block;
@@ -876,14 +831,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .inline-note-link svg { width: 16px; height: 16px; margin-top: 3px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (prefers-reduced-motion: reduce) {
-  .note-chevron { transition: none; }
 }
 
 @media (max-width: 420px) {
   .bottom-nav { padding-left: 10px; padding-right: 10px; }
-  .note-summary { grid-template-columns: 46px minmax(0, 1fr) 18px; gap: 9px; }
-  .notes-kinds { gap: 5px; }
-  .notes-kinds button { padding-left: 4px; padding-right: 4px; }
 }
 
 .linked-note-group { display: grid; gap: 7px; }
@@ -903,32 +854,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* Study-note links and full-screen reading */
 .record-highlight { grid-template-columns: 1fr; }
-.note-content { padding: 20px 14px; }
-.note-linked-wines { margin: 0 0 18px; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.note-linked-wines h3 { margin: 0 0 10px; font-size: var(--fs-l); line-height: var(--lh-l); }
-.note-linked-wines > p { margin: 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
-.note-linked-wine-list { display: grid; gap: 7px; }
-.note-linked-wine-list > button {
-  width: 100%;
-  min-height: 56px;
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) 18px;
-  gap: 10px;
-  align-items: center;
-  padding: 7px 8px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  text-align: left;
-  cursor: pointer;
-}
-.note-linked-wine-list img,
-.linked-wine-mark { width: 40px; height: 48px; border-radius: 5px; object-fit: cover; object-position: center 62%; background-color: var(--photo-bg); }
-.linked-wine-mark { display: block; }
-.note-linked-wine-list > button > span:nth-child(2) { min-width: 0; display: grid; gap: 1px; }
-.note-linked-wine-list strong { color: var(--accent); font-size: var(--fs-m); line-height: var(--lh-m); overflow-wrap: anywhere; }
-.note-linked-wine-list small { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
-.linked-wine-arrow { color: var(--dim); font-size: var(--fs-xl); text-align: center; }
 .pinch-image {
   position: relative;
   background: #fff;
@@ -1048,7 +973,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* Lighter list and notes layout (type scale refresh) */
 .hero { padding: 8px 0 18px; border-bottom: 0; align-items: center; }
 .hero-note { margin-top: 2px; }
-.hero-button { min-height: 40px; padding: 0 14px; border-radius: 999px; font-size: var(--fs-m); }
+.hero-button { min-height: 40px; padding: 0 14px; border-radius: var(--radius); font-size: var(--fs-m); }
 .hero-button svg { width: 16px; height: 16px; }
 .collection { padding-top: 0; }
 .results-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 6px; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
@@ -1062,14 +987,113 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .wine-row h3 { color: var(--text); font-weight: 700; }
 .wine-row p { margin-top: 2px; }
 .wine-row .row-arrow svg { width: 16px; height: 16px; }
-.notes-kinds { gap: 6px; margin-bottom: 18px; }
-.notes-kinds button { min-height: 44px; align-items: center; padding: 0 8px; border-radius: 999px; }
-.note-linked-wine-list strong { color: var(--text); font-weight: 650; }
-.linked-wine-arrow { font-size: var(--fs-l); }
 @media (max-width: 420px) {
   .hero h1 { font-size: var(--fs-xl); }
 }
 
+
+/* 카드 규칙 (와인 노트): 카드 머리 + ＋ 줄. 펼치면 －, 제목 줄 배경, 왼쪽 컬러바, 제목이 탭 줄 아래에 붙는다 */
+.notes-page { --stick: 56px; }
+.notes-kinds {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  gap: 8px;
+  margin: 0 -18px 8px;
+  padding: 8px 18px;
+  background: var(--bg);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.notes-kinds::-webkit-scrollbar { display: none; }
+.notes-kinds button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--dim);
+  font-size: var(--fs-s);
+  line-height: var(--lh-s);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.notes-kinds button.active { border-color: var(--accent-soft); background: var(--accent-soft); color: var(--accent); }
+.fold-card {
+  overflow: clip;
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  background: var(--surface);
+}
+.fold-head { padding: var(--card-pad); border-bottom: 1px solid var(--border); }
+.fold-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.fold-title h2 { min-width: 0; margin: 0; font-size: var(--fs-xl); line-height: var(--lh-xl); font-weight: 700; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.count-badge { flex: 0 0 auto; padding: 2px 10px; border-radius: 999px; background: color-mix(in srgb, var(--border) 55%, var(--surface)); color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
+.fold-head p { margin: 6px 0 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
+.note-item { scroll-margin-top: var(--stick); }
+.note-item + .note-item { border-top: 1px solid var(--border); }
+.fold-row {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px var(--card-pad);
+  border: 0;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.fold-row-copy { min-width: 0; flex: 1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.fold-row-copy strong { font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; overflow-wrap: anywhere; }
+.fold-row-copy small { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); overflow-wrap: anywhere; }
+.fold-sign { flex: 0 0 auto; display: grid; place-items: center; width: 24px; height: 24px; color: var(--dim); }
+.fold-sign svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.note-item.open { box-shadow: inset 3px 0 0 var(--accent); }
+.note-item.open > .fold-row {
+  position: sticky;
+  top: var(--stick);
+  z-index: 3;
+  background: var(--disclosure-bg);
+  box-shadow: inset 3px 0 0 var(--accent), 0 1px 0 var(--border);
+}
+.note-content { padding: 14px var(--card-pad) var(--card-pad); }
+.note-lead { margin: 0 0 16px; font-size: var(--fs-m); line-height: var(--lh-m); }
+.note-linked-wines { margin: 0 0 16px; }
+.note-linked-wines h3 { margin: 0 0 4px; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
+.note-linked-wines > p { margin: 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
+.note-linked-wine-list > button {
+  width: 100%;
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto 14px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.note-linked-wine-list img,
+.linked-wine-mark { width: 36px; height: 44px; border-radius: 5px; object-fit: cover; object-position: center 62%; background-color: var(--photo-bg); }
+.linked-wine-mark { display: block; }
+.note-linked-wine-list > button > span:nth-child(2) { min-width: 0; display: grid; }
+.note-linked-wine-list strong { font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; overflow-wrap: anywhere; }
+.note-linked-wine-list small, .linked-wine-year { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
+.linked-wine-year { font-variant-numeric: tabular-nums; }
+.linked-wine-arrow { color: var(--dim); font-size: var(--fs-l); line-height: var(--lh-l); text-align: center; }
+.notes-card .no-results { padding: 32px var(--card-pad); }
+@media (max-width: 420px) {
+  .notes-kinds { margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; }
+}
     </style>
   </head>
   <body>
@@ -1152,6 +1176,7 @@ const ICON_ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 
 const ICON_PLUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>';
 const ICON_SEARCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="M16 16l4 4" /></svg>';
 const ICON_BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16ZM20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z" /></svg>';
+const ICON_MINUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>';
 const ICON_CHEVRON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>';
 
 /* ================= wine study notes data ================= */
@@ -1334,7 +1359,12 @@ let detailScroll = 1;
 let pendingScroll = 1;
 let detailConfirmDelete = false;
 let noteTarget = null;
-let notesKind = "varieties";
+const NOTES_KIND_KEY = "wine-notes-kind";
+let notesKind = (function () {
+  try { const saved = localStorage.getItem(NOTES_KIND_KEY); if (saved === "varieties" || saved === "regions" || saved === "basics") return saved; } catch (e) {}
+  return "varieties";
+})();
+function rememberNotesKind() { try { localStorage.setItem(NOTES_KIND_KEY, notesKind); } catch (e) {} }
 let notesQuery = "";
 let notesOpenId = null;
 let form = null;
@@ -1623,7 +1653,7 @@ function notesKindsHTML() {
   let html = "";
   ["varieties", "regions", "basics"].forEach(function (kind) {
     const active = !notesQuery.trim() && notesKind === kind;
-    html += '<button role="tab" data-action="note-kind" data-kind="' + kind + '" aria-selected="' + active + '" class="' + (active ? "active" : "") + '"><span>' + noteKindLabels[kind] + "</span><strong>" + noteCollections[kind].length + "</strong></button>";
+    html += '<button role="tab" data-action="note-kind" data-kind="' + kind + '" aria-selected="' + active + '" class="' + (active ? "active" : "") + '">' + noteKindLabels[kind] + "</button>";
   });
   return html;
 }
@@ -1648,38 +1678,51 @@ function notesHTML() {
   html += bottomNavHTML();
   return html;
 }
+const noteKindIntros = {
+  varieties: "품종마다 특징과 내가 마셔 본 와인",
+  regions: "산지마다 특징과 내가 마셔 본 와인",
+  basics: "와인을 이해하고 표현하는 기초 개념"
+};
+function noteRowSummary(note, linkedCount) {
+  if (note.kind === "basics") return "";
+  return [note.subtitle || "", linkedCount ? "기록 " + linkedCount + "병" : ""].filter(Boolean).join(" · ");
+}
 function notesResultsHTML() {
   const list = visibleNotes();
-  let html = '<div class="notes-results-heading"><h2>'
-    + (notesQuery.trim() ? "‘" + esc(notesQuery.trim()) + "’ 검색 결과" : noteKindLabels[notesKind])
-    + '</h2><span aria-live="polite">' + list.length + "개</span></div>";
+  const searching = Boolean(notesQuery.trim());
+  let html = '<div class="fold-card notes-card">'
+    + '<header class="fold-head"><div class="fold-title"><h2>'
+    + (searching ? "‘" + esc(notesQuery.trim()) + "’ 검색 결과" : noteKindLabels[notesKind])
+    + '</h2><span class="count-badge" aria-live="polite">' + list.length + "개</span></div>"
+    + "<p>" + (searching ? "품종 · 산지 · 기초 개념에서 찾은 노트" : noteKindIntros[notesKind]) + "</p></header>";
   if (list.length === 0) {
     html += '<div class="no-results"><p>일치하는 노트가 없습니다.</p><button class="text-button" data-action="clear-notes-search">검색어 지우기</button></div>';
   } else {
-    html += '<div class="notes-list">';
     list.forEach(function (note) {
       const isOpen = notesOpenId === note.id;
+      const linked = linkedWinesFor(note);
+      const summary = noteRowSummary(note, linked.length);
       html += '<article class="note-item' + (isOpen ? " open" : "") + '" id="note-' + note.id + '">'
-        + '<button class="note-summary" data-action="toggle-note" data-id="' + note.id + '" aria-expanded="' + isOpen + '" aria-controls="note-pages-' + note.id + '">'
-        + '<span class="note-number">' + esc(note.kind === "basics" ? note.subtitle : noteKindLabels[note.kind]) + "</span>"
-        + '<span class="note-copy"><strong>' + esc(note.title) + "</strong>"
-        + (note.kind !== "basics" && note.subtitle ? "<small>" + esc(note.subtitle) + "</small>" : "")
-        + "<span>" + esc(note.summary) + "</span></span>"
-        + '<span class="note-chevron">' + ICON_CHEVRON + "</span>"
+        + '<button class="fold-row" data-action="toggle-note" data-id="' + note.id + '" aria-expanded="' + isOpen + '" aria-controls="note-pages-' + note.id + '">'
+        + '<span class="fold-row-copy"><strong>' + esc(note.title) + "</strong>"
+        + (summary ? "<small>" + esc(summary) + "</small>" : "")
+        + '</span><span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span>"
         + "</button>";
       if (isOpen) {
         html += '<div class="note-content" id="note-pages-' + note.id + '">';
+        html += '<p class="note-lead">' + esc(note.summary) + "</p>";
         if (note.kind !== "basics") {
-          const linked = linkedWinesFor(note);
           html += '<section class="note-linked-wines" aria-label="' + esc(note.title) + '와 연결된 와인 기록"><h3>' + (note.kind === "varieties" ? "이 품종의 와인 기록" : "이 산지의 와인 기록") + "</h3>";
           if (linked.length > 0) {
             html += '<div class="note-linked-wine-list">';
             linked.forEach(function (wine) {
               html += '<button data-action="open-linked-wine" data-id="' + esc(wine.id) + '" aria-label="' + esc(wine.name) + ' 상세 보기">'
                 + (wine.photo_thumbnail_url ? '<img src="' + esc(wine.photo_thumbnail_url) + '" loading="lazy" decoding="async" alt="" />' : '<span class="linked-wine-mark wine-mark--' + esc(wine.wine_type) + '" aria-hidden="true"></span>')
-                + "<span><strong>" + esc(wine.vintage ? wine.vintage + " " + wine.name : wine.name) + "</strong>"
+                + "<span><strong>" + esc(wine.name) + "</strong>"
                 + (wine.consumed_date ? "<small>" + esc(formatDate(wine.consumed_date)) + "</small>" : "")
-                + '</span><span class="linked-wine-arrow" aria-hidden="true">›</span></button>';
+                + "</span>"
+                + (wine.vintage ? '<span class="linked-wine-year">' + esc(wine.vintage) + "</span>" : "<span></span>")
+                + '<span class="linked-wine-arrow" aria-hidden="true">›</span></button>';
             });
             html += "</div>";
           } else {
@@ -1696,9 +1739,8 @@ function notesResultsHTML() {
       }
       html += "</article>";
     });
-    html += "</div>";
   }
-  return html;
+  return html + "</div>";
 }
 
 /* ================= detail view ================= */
@@ -2216,6 +2258,7 @@ function openWineNote(noteId) {
   activeTab = "notes";
   notesQuery = "";
   notesKind = note.kind;
+  rememberNotesKind();
   notesOpenId = note.id;
   render({ restoreScroll: true });
   window.setTimeout(function () {
@@ -2370,6 +2413,7 @@ appEl.addEventListener("click", function (event) {
   else if (action === "clear-notes-search") { notesQuery = ""; render({ keepScroll: true }); }
   else if (action === "note-kind") {
     notesKind = target.getAttribute("data-kind");
+    rememberNotesKind();
     notesQuery = "";
     notesOpenId = null;
     render();
@@ -2379,6 +2423,14 @@ appEl.addEventListener("click", function (event) {
     const id = target.getAttribute("data-id");
     notesOpenId = notesOpenId === id ? null : id;
     render({ keepScroll: true });
+    /* 접거나 펼친 뒤 그 줄이 탭 줄 뒤로 숨었으면 제목 자리로 돌아간다 */
+    const item = document.getElementById("note-" + id);
+    const tabs = document.getElementById("notes-kinds");
+    if (item) {
+      const stick = tabs ? tabs.getBoundingClientRect().bottom : 0;
+      const top = item.getBoundingClientRect().top;
+      if (top < stick) window.scrollTo(0, window.scrollY + top - stick);
+    }
   }
   else if (action === "open-note") openWineNote(target.getAttribute("data-note-id"));
   else if (action === "open-linked-wine") openDetail(target.getAttribute("data-id"));
