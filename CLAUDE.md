@@ -3,6 +3,10 @@
 A personal wine-tasting log served by GitHub Pages at https://witchveronica88.github.io/wine/.
 The UI is in Korean. Write user-facing text in Korean, matching the tone of the existing records.
 
+## Publishing changes
+
+The owner wants every change live right away: commit and push straight to `main`, without creating branches or pull requests. GitHub Pages deploys `main` within a minute or two.
+
 ## Layout
 
 - `index.html`: the whole app (CSS + vanilla JS, no build step). At startup it loads `data/wines.json` and `data/notes.json` with `fetch`.
@@ -21,7 +25,7 @@ Records saved from the in-app form exist only in that browser's localStorage (`w
 2. If there is a photo, run `python3 tools/add_photo.py <image> <id>`. Open the image first and crop it to the bottle if needed.
 3. Add an object to `data/wines.json`. Keep the file sorted by `id` and use 2-space indent with `ensure_ascii=False`.
 4. Run `python3 tools/check.py`.
-5. Commit the JSON and the photos together.
+5. Commit the JSON and the photos together and push to `main`.
 
 Never paste base64 images into JSON or HTML.
 
