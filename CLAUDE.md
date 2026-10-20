@@ -64,3 +64,8 @@ python3 -m http.server 8765   # then open http://localhost:8765/
 ```
 
 `fetch` does not work from `file://`, so always use a local server.
+
+## Font size
+
+- The base body text size is 16px. Never make body text smaller than 16px.
+- Use sizes below 16px only for secondary text such as dates, labels and captions.
