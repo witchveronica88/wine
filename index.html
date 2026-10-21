@@ -908,8 +908,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   pointer-events: auto;
 }
 .pinch-image-loading { right: auto; left: 8px; z-index: 2; }
-.pinch-image.is-missing { display: grid; place-items: center; min-height: 120px; background: var(--photo-bg); }
-.pinch-image-missing { margin: 0; padding: 16px; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); text-align: center; }
 
 /* Local (this device only) changes */
 [hidden] { display: none !important; }
@@ -1467,7 +1465,7 @@ function localDateString() {
 function pinchZoomHTML(previewSrc, highResSrc, alt, fit) {
   return '<div class="pinch-image pinch-image--' + (fit || "page") + '" data-preview="' + esc(previewSrc) + '" data-highres="' + esc(highResSrc || previewSrc) + '">'
     + '<div class="pinch-image-frame"><img src="' + esc(previewSrc) + '" loading="lazy" decoding="async" draggable="false" alt="' + esc(alt) + '" /></div>'
-    + '<span class="pinch-image-hint" aria-hidden="true">두 손가락으로 확대</span>'
+    + '<span class="pinch-image-hint" hidden></span>'
     + "</div>";
 }
 function setupPinchZoom(root) {
@@ -1475,8 +1473,8 @@ function setupPinchZoom(root) {
   const img = root.querySelector("img");
   img.addEventListener("error", function () {
     if (root.classList.contains("is-zoomed")) return;
-    root.classList.add("is-missing");
-    root.innerHTML = '<p class="pinch-image-missing">이미지를 불러오지 못했습니다</p>';
+    /* 없는 이미지는 안내 문구 없이 통째로 뺀다 */
+    root.remove();
   });
   let statusEl = root.querySelector(".pinch-image-hint");
   let statusMode = "hint";
@@ -1503,8 +1501,7 @@ function setupPinchZoom(root) {
     } else if (!zoomed && statusMode !== "hint") {
       const span = document.createElement("span");
       span.className = "pinch-image-hint";
-      span.setAttribute("aria-hidden", "true");
-      span.textContent = "두 손가락으로 확대";
+      span.hidden = true;
       statusEl.replaceWith(span);
       statusEl = span;
       statusMode = "hint";

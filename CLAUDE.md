@@ -13,7 +13,7 @@ The owner wants every change live right away: commit and push straight to `main`
 - `data/wines.json`: every wine record, shared across devices. This is the source of truth.
 - `data/notes.json`: the study-note index (varieties, regions, basics).
 - `photos/NNN.webp` and `photos/NNN-thumb.webp`: the bottle photo for wine id NNN, zero-padded to 3 digits.
-- `assets/notes/<kind>/p-NN.webp`: study-note page images. **Not in the repo yet**, so the app shows an "image unavailable" box for them.
+- `assets/notes/<kind>/p-NN.webp`: study-note page images. **Not in the repo yet**. An image that fails to load is removed with no message, so nothing shows until they are added.
 - `tools/add_photo.py`: converts a photo into the two webp files.
 - `tools/check.py`: validates `data/wines.json`. Run it before every commit.
 
