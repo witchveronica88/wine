@@ -2066,24 +2066,22 @@ function wineBodyHTML(wine) {
   if (sections) html += '<div class="wine-sections">' + sections + "</div>";
   if (!verdictJudgment && facts.length === 0 && !sections) html += '<p class="detail-empty">아직 정리된 내용이 없습니다.</p>';
 
+  /* records are edited through the repo, so the app only offers a way back
+     for leftover device-only changes */
   const state = localState(wine);
-  html += '<div class="wine-actions">';
-  if (!detailConfirmDelete) {
-    if (state === "edited") {
-      html += '<p class="local-note">이 기기에서 고친 내용이 표시되고 있습니다.</p>'
-        + '<button class="text-button" data-action="revert-wine">원래 기록으로 되돌리기</button>';
-    }
-    html += '<div class="wine-action-row"><button class="text-button" data-action="edit-wine">수정</button>'
-      + '<button class="delete-link" data-action="ask-delete">삭제</button></div>';
-  } else {
-    html += '<div class="delete-confirm" role="alert"><p>이 기록을 삭제하시겠습니까?</p>'
-      + (state === "added" ? "" : '<p class="delete-hint">이 기기에서만 숨겨지고, 공유된 원본 기록은 남습니다.</p>')
-      + "<div>"
-      + '<button data-action="cancel-delete">취소</button>'
-      + '<button data-action="confirm-delete">삭제</button>'
-      + "</div></div>";
+  if (state === "edited") {
+    html += '<div class="wine-actions"><p class="local-note">이 기기에서 고친 내용이 표시되고 있습니다.</p>'
+      + '<button class="text-button" data-action="revert-wine">원래 기록으로 되돌리기</button></div>';
+  } else if (state === "added") {
+    html += '<div class="wine-actions"><p class="local-note">이 기기에만 저장된 기록입니다.</p>'
+      + (detailConfirmDelete
+        ? '<div class="delete-confirm" role="alert"><p>이 기록을 지울까요?</p><div>'
+          + '<button data-action="cancel-delete">취소</button>'
+          + '<button data-action="confirm-delete">지우기</button></div></div>'
+        : '<button class="delete-link" data-action="ask-delete">이 기기에서 지우기</button>')
+      + "</div>";
   }
-  return html + "</div></div>";
+  return html + "</div>";
 }
 
 /* ================= form view ================= */

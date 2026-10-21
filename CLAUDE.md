@@ -84,7 +84,7 @@ Pages must not scroll sideways at a 360px phone width.
 
 - Each main screen starts with a small centered title in `.brand-row`: "와인 기록" / "와인 노트", `--fs-l` bold, with a thin double-line decoration on both sides. About 12px above and below.
 - The title is not sticky. It scrolls away and only the tab row stays at the top.
-- There is no in-app "add wine" button or form. The owner sends the details and Claude adds the record to `data/wines.json`. Editing and deleting from an opened wine still work (local only).
+- There is no in-app add, edit or delete. The owner asks Claude, and Claude changes `data/wines.json` (and `photos/`) in the repo. An opened wine only shows "원래 기록으로 되돌리기" / "이 기기에서 지우기" for leftover device-only changes from before.
 
 ### Fold cards (카드 규칙)
 
