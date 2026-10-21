@@ -1284,6 +1284,17 @@ main.is-searching { --stick: 0px; }
 .wine-section-body .taste-bars + .wine-facts { margin-top: 20px; }
 
 .search-label { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+/* 점수: 출처와 점수를 한 줄에, 나머지는 회색 한 줄 */
+.score-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.score-item:first-child { padding-top: 0; }
+.score-item:last-child { padding-bottom: 0; border-bottom: 0; }
+.score-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.score-name { min-width: 0; font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; overflow-wrap: anywhere; }
+.score-value { flex: 0 0 auto; color: var(--accent); font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
+.score-info { margin: 2px 0 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); overflow-wrap: anywhere; }
+/* 지역 · 품종 글 안의 노트 이름: 색만 바꾼다 */
+.fact dd .inline-note-link { display: inline; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: inherit; text-align: inherit; cursor: pointer; }
+
     </style>
   </head>
   <body>
@@ -1405,8 +1416,17 @@ function regionCountry(pageNumber) {
 let noteCollections = {};
 let noteGroups = {}; /* tab key → [{ key, label, notes }] */
 function buildNotes(src) {
-  varietyNotes = src.varietyRows.map(function (row, i) { return makeNote("varieties", i + 3, row[0], row[1], row[2], row[3].slice()); });
-  regionNotes = src.regionRows.map(function (row) { return makeNote("regions", row[0], row[1], row[2], row[3], row[4].slice()); });
+  /* varietyRows: [title, english, summary, aliases, 레드|화이트]; regionRows: [page, title, english, summary, aliases, country] */
+  varietyNotes = src.varietyRows.map(function (row, i) {
+    const note = makeNote("varieties", i + 3, row[0], row[1], row[2], row[3].slice());
+    note.group = row[4] || (whiteVarieties.indexOf(row[0]) === -1 ? "레드" : "화이트");
+    return note;
+  });
+  regionNotes = src.regionRows.map(function (row) {
+    const note = makeNote("regions", row[0], row[1], row[2], row[3], row[4].slice());
+    note.group = row[5] || regionCountry(row[0]) || "기타";
+    return note;
+  });
   /* basicRows: [page, group, title, summary]. 예전 모양(basicTitles)도 읽는다 */
   const basicRows = src.basicRows || (src.basicTitles || []).map(function (title, i) {
     const n = i + 1;
@@ -1421,9 +1441,8 @@ function buildNotes(src) {
   /* details: { kind: { title: [[label, text], …] } } */
   const details = src.details || {};
   allWineNotes.forEach(function (note) { note.details = (details[note.kind] || {})[note.title] || []; });
-  varietyNotes.forEach(function (note) { note.group = whiteVarieties.indexOf(note.title) === -1 ? "레드" : "화이트"; });
-  regionNotes.forEach(function (note) { note.group = regionCountry(Number(note.id.split("-")[1])) || "기타"; });
   noteCollections = { varieties: varietyNotes, regions: regionNotes, basics: basicNotes };
+  noteMatchCache.clear();
   noteGroups = { varieties: groupNotes(varietyNotes), regions: groupNotes(regionNotes), basics: groupNotes(basicNotes) };
 }
 function groupNotes(notes) {
@@ -1436,36 +1455,48 @@ function groupNotes(notes) {
   return groups;
 }
 
-function findWineNotes(value, kind) {
-  const source = normalizeText(value);
-  if (!source) return [];
-  const notes = kind === "varieties" ? varietyNotes : regionNotes;
+/* 와인의 품종 · 지역 글에서 노트 이름이 나오는 자리를 찾는다(쁘띠 시라 > 시라처럼 긴 이름 우선).
+   띄어쓰기 · 가운뎃점 · 괄호가 달라도 찾는다 */
+const noteMatchCache = new Map();
+function matchNotesInText(value, kind) {
+  const text = String(value || "");
+  const key = kind + "|" + text;
+  if (noteMatchCache.has(key)) return noteMatchCache.get(key);
   const candidates = [];
-  notes.forEach(function (item) {
-    [item.title, item.subtitle || ""].concat(item.aliases || []).forEach(function (name) {
-      const normalized = normalizeText(name);
-      if (normalized.length > 1 && source.includes(normalized)) candidates.push({ item: item, normalized: normalized });
+  (kind === "varieties" ? varietyNotes : regionNotes).forEach(function (note) {
+    [note.title, note.subtitle || ""].concat(note.aliases || []).forEach(function (name) {
+      const chars = Array.from(normalizeText(name));
+      if (chars.length < 2) return;
+      const pattern = new RegExp(chars.map(function (c) { return c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("[\\s·.,()\\-_/]*"), "gi");
+      let m;
+      while ((m = pattern.exec(text))) candidates.push({ note: note, start: m.index, end: m.index + m[0].length, size: chars.length });
     });
   });
-  candidates.sort(function (a, b) { return b.normalized.length - a.normalized.length; });
-  const occupied = [];
-  const matched = [];
-  candidates.forEach(function (candidate) {
-    const start = source.indexOf(candidate.normalized);
-    const end = start + candidate.normalized.length;
-    if (matched.some(function (m) { return m.item.id === candidate.item.id; })) return;
-    if (occupied.some(function (r) { return start < r.end && end > r.start; })) return;
-    occupied.push({ start: start, end: end });
-    matched.push({ item: candidate.item, start: start });
+  /* 겹치면 긴 이름이 이기고, 같은 노트는 글에서 처음 나온 자리 하나만 */
+  candidates.sort(function (a, b) { return b.size - a.size || a.start - b.start; });
+  const kept = [];
+  candidates.forEach(function (c) {
+    if (!kept.some(function (k) { return c.start < k.end && c.end > k.start; })) kept.push(c);
   });
-  return matched.sort(function (a, b) { return a.start - b.start; }).map(function (m) { return m.item; });
+  kept.sort(function (a, b) { return a.start - b.start; });
+  const picked = kept.filter(function (c, i) { return !kept.slice(0, i).some(function (k) { return k.note === c.note; }); });
+  noteMatchCache.set(key, picked);
+  return picked;
 }
-function noteMatchesValue(note, value) {
-  const source = normalizeText(value);
-  if (!source) return false;
-  return [note.title, note.subtitle || ""].concat(note.aliases || [])
-    .map(normalizeText)
-    .some(function (name) { return name.length > 1 && source.includes(name); });
+function findWineNotes(value, kind) {
+  return matchNotesInText(value, kind).map(function (m) { return m.note; });
+}
+/* 글은 그대로 두고, 노트 이름 부분만 색으로 표시해 누르면 그 노트로 간다 */
+function linkNotesInText(value, kind) {
+  const text = String(value || "");
+  let html = "";
+  let at = 0;
+  matchNotesInText(text, kind).forEach(function (m) {
+    html += esc(text.slice(at, m.start))
+      + '<button class="inline-note-link" data-action="open-note" data-note-id="' + m.note.id + '">' + esc(text.slice(m.start, m.end)) + "</button>";
+    at = m.end;
+  });
+  return html + esc(text.slice(at));
 }
 
 /* ================= data & storage =================
@@ -1914,7 +1945,7 @@ function refreshSearch() {
 
 function collectionHTML() {
   let html = '<main class="page-wrap brand-page with-bottom-nav' + (isSearching() ? " is-searching" : "") + '">';
-  html += '<header class="brand-row"><h1>와인 기록</h1></header>';
+  html += '<header class="brand-row"><h1>와인 노트</h1></header>';
 
   if (wines.length === 0) {
     html += '<section class="empty-state">'
@@ -1959,7 +1990,7 @@ function visibleNotes() {
 function linkedWinesFor(note) {
   if (note.kind === "basics") return [];
   return wines.filter(function (wine) {
-    return noteMatchesValue(note, note.kind === "varieties" ? wine.grapes : wine.region);
+    return findWineNotes(note.kind === "varieties" ? wine.grapes : wine.region, note.kind).indexOf(note) !== -1;
   });
 }
 function notesKindsHTML() {
@@ -1975,7 +2006,7 @@ function notesKindsHTML() {
 function notesHTML() {
   const tab = currentNoteTab();
   let html = '<main class="notes-page page-wrap with-bottom-nav' + (isSearching() ? " is-searching" : "") + '">';
-  html += '<header class="brand-row"><h1>' + esc(tab.title) + "</h1></header>";
+  html += '<header class="brand-row"><h1>와인 노트</h1></header>';
   html += searchBoxHTML();
   html += '<div id="tab-body">' + notesBodyHTML() + "</div></main>";
   html += bottomNavHTML();
@@ -2066,17 +2097,6 @@ function notesResultsHTML() {
 function factHTML(label, inner) {
   return '<div class="fact"><dt>' + esc(label) + "</dt><dd>" + inner + "</dd></div>";
 }
-function linkedNotesHTML(value, notes) {
-  if (notes.length === 0) return esc(value);
-  if (notes.length === 1) {
-    return '<button class="inline-note-link" data-action="open-note" data-note-id="' + notes[0].id + '">' + esc(value) + ICON_BOOK + "</button>";
-  }
-  let html = '<span class="linked-note-group"><span>' + esc(value) + '</span><span class="linked-note-actions">';
-  notes.forEach(function (note) {
-    html += '<button class="inline-note-chip" data-action="open-note" data-note-id="' + note.id + '">' + esc(note.title) + "</button>";
-  });
-  return html + "</span></span>";
-}
 function tasteBarHTML(label, value) {
   return '<div class="taste-bar-row" aria-label="' + esc(label) + " 5단계 중 " + value + '"><span>' + esc(label) + '</span><div class="taste-track" aria-hidden="true"><i style="width: ' + value * 20 + '%"></i></div><b>' + value + "</b></div>";
 }
@@ -2124,8 +2144,8 @@ function wineBodyHTML(wine) {
 
   const facts = [];
   if (wine.producer) facts.push(factHTML("생산자", esc(wine.producer)));
-  if (wine.region) facts.push(factHTML("지역", linkedNotesHTML(wine.region, findWineNotes(wine.region, "regions"))));
-  if (wine.grapes) facts.push(factHTML("품종", linkedNotesHTML(wine.grapes, findWineNotes(wine.grapes, "varieties"))));
+  if (wine.region) facts.push(factHTML("지역", linkNotesInText(wine.region, "regions")));
+  if (wine.grapes) facts.push(factHTML("품종", linkNotesInText(wine.grapes, "varieties")));
   if (wine.alcohol_percent) facts.push(factHTML("도수", esc(wine.alcohol_percent)));
   if (wine.volume_ml) facts.push(factHTML("용량", esc(wine.volume_ml) + "ml"));
   if (wine.consumed_date) facts.push(factHTML("마신 날", esc(formatDate(wine.consumed_date))));
@@ -2149,15 +2169,15 @@ function wineBodyHTML(wine) {
       + (tastingRows.length > 0 ? '<dl class="wine-facts wine-facts--stack">' + tastingRows.map(function (r) { return factHTML(r[0], r[1]); }).join("") + "</dl>" : ""));
   }
   if (wine.scores && wine.scores.length > 0) {
-    let scoresHTML = '<div class="scores-list">';
+    let scoresHTML = '<div class="score-items">';
     wine.scores.forEach(function (score) {
-      scoresHTML += '<article class="score-row">'
-        + '<div class="score-main"><strong>' + esc(score.score) + "</strong><span>" + esc(score.source) + "</span></div>"
-        + '<div class="score-meta">'
-        + (score.vintage ? "<span>" + esc(score.vintage === "통산" ? "통산" : score.vintage === "미상" ? "빈티지 미상" : score.vintage + " 빈티지") + "</span>" : "")
-        + (score.ratingCount ? "<span>" + esc(score.ratingCount) + " 평가</span>" : "")
-        + (score.note ? "<span>" + esc(score.note) + "</span>" : "")
-        + "</div></article>";
+      const info = [
+        score.vintage ? (score.vintage === "통산" ? "통산" : score.vintage === "미상" ? "빈티지 미상" : score.vintage + " 빈티지") : "",
+        score.ratingCount ? score.ratingCount + " 평가" : "",
+        score.note || ""
+      ].filter(Boolean).join(" · ");
+      scoresHTML += '<div class="score-item"><div class="score-line"><span class="score-name">' + esc(score.source) + '</span><strong class="score-value">' + esc(score.score) + "</strong></div>"
+        + (info ? '<p class="score-info">' + esc(info) + "</p>" : "") + "</div>";
     });
     sections += wineSectionHTML(wine, "scores", "점수", "", scoresHTML + "</div>");
   }
