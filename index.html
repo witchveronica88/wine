@@ -1306,6 +1306,28 @@ main.is-searching { --stick: 0px; }
 .wine-mine .rating { margin: 0; color: var(--text); font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
 .wine-mine p { margin: 0; flex: 1 1 200px; font-size: var(--fs-m); line-height: var(--lh-m); }
 .wine-section-body .wine-verdict { margin: 0 0 10px; }
+/* 펼친 노트 안의 마셔 본 와인: 날짜 · 이름만, 카드 끝까지 이어진 선 */
+.note-content.has-list { padding-bottom: 0; }
+.drunk-list { margin: 16px calc(-1 * var(--card-pad)) 0 calc(3px - var(--card-pad)); }
+.drunk-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 12px var(--card-pad) 12px calc(var(--card-pad) - 3px);
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.drunk-row:active { background: var(--disclosure-bg); }
+.drunk-date { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-m); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.drunk-name { font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 400; overflow-wrap: anywhere; }
+
     </style>
   </head>
   <body>
@@ -1609,6 +1631,7 @@ function loadData() {
     } catch (e) {}
     if (location.search) history.replaceState(history.state, "", location.pathname);
     render({ restoreScroll: true });
+    checkForNewVersion();
   }).catch(function () {
     if (!alreadyReloaded()) { reloadFresh(); return; }
     loadState = "error";
@@ -2026,30 +2049,28 @@ function noteItemHTML(note) {
     + '</span><span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span>"
     + "</button>";
   if (isOpen) {
-    html += '<div class="note-content" id="note-pages-' + note.id + '">';
+    html += '<div class="note-content' + (linked.length > 0 ? " has-list" : "") + '" id="note-pages-' + note.id + '">';
     html += '<p class="note-lead">' + esc(note.summary) + "</p>";
     if (note.details.length > 0) {
       html += textItemsHTML(note.details.map(function (d) { return [d[0], esc(d[1])]; }));
-    }
-    if (linked.length > 0) {
-      html += '<section class="note-linked-wines" aria-label="' + esc(note.title) + '와 연결된 와인 기록"><h3>마셔 본 와인</h3><div class="note-linked-wine-list">';
-      linked.forEach(function (wine) {
-        html += '<button data-action="open-linked-wine" data-id="' + esc(wine.id) + '" aria-label="' + esc(wine.name) + ' 상세 보기">'
-          + (wine.photo_thumbnail_url ? '<img src="' + esc(wine.photo_thumbnail_url) + '" loading="lazy" decoding="async" alt="" />' : '<span class="linked-wine-mark" aria-hidden="true"></span>')
-          + "<span><strong>" + esc(wine.name) + "</strong>"
-          + (wine.consumed_date ? "<small>" + esc(formatDate(wine.consumed_date)) + "</small>" : "")
-          + "</span>"
-          + (wine.vintage ? '<span class="linked-wine-year">' + esc(wine.vintage) + "</span>" : "<span></span>")
-          + '<span class="linked-wine-arrow" aria-hidden="true">›</span></button>';
-      });
-      html += "</div></section>";
     }
     html += '<div class="note-pages">';
     note.pages.filter(Boolean).forEach(function (pageUrl, index) {
       const alt = (note.title + " 설명 " + (note.pages.length > 1 ? (index + 1) + "쪽" : "")).trim();
       html += pinchZoomHTML(pageUrl, pageUrl, alt, "page");
     });
-    html += "</div></div>";
+    html += "</div>";
+    /* 마셔 본 와인: 제목 없이 날짜를 맨 앞에 두고, 카드 끝까지 이어진 선으로 나눈다 */
+    if (linked.length > 0) {
+      html += '<div class="drunk-list">';
+      linked.slice().sort(function (a, b) { return String(b.consumed_date || "").localeCompare(String(a.consumed_date || "")); }).forEach(function (wine) {
+        html += '<button class="drunk-row" data-action="open-linked-wine" data-id="' + esc(wine.id) + '">'
+          + '<span class="drunk-date">' + esc(wine.consumed_date ? formatDate(wine.consumed_date) : "") + "</span>"
+          + '<span class="drunk-name">' + esc(wine.name) + "</span></button>";
+      });
+      html += "</div>";
+    }
+    html += "</div>";
   }
   return html + "</article>";
 }
@@ -2765,6 +2786,23 @@ window.addEventListener("touchmove", function (event) {
 window.addEventListener("touchend", endPull, { passive: true });
 window.addEventListener("touchcancel", function () { pullStart = null; setPull(0, ""); }, { passive: true });
 
+/* 폰에 남은 예전 화면 알아채기: 지금 올라가 있는 index.html의 스타일 · 스크립트가
+   이 페이지와 다르면 새 페이지를 연다(5분에 한 번까지만) */
+const STALE_KEY = "wine-stale-reload";
+function checkForNewVersion() {
+  fetch("index.html?v=" + Date.now(), { cache: "no-store" }).then(function (res) { return res.ok ? res.text() : ""; }).then(function (text) {
+    if (!text) return;
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    const pick = function (d) { return ["style", "script"].map(function (tag) { const el = d.querySelector(tag); return el ? el.textContent : ""; }).join("\n"); };
+    if (pick(doc) === pick(document)) return;
+    let last = 0;
+    try { last = Number(sessionStorage.getItem(STALE_KEY)) || 0; } catch (e) { return; }
+    if (Date.now() - last < 5 * 60 * 1000) return;
+    try { sessionStorage.setItem(STALE_KEY, String(Date.now())); } catch (e) { return; }
+    reloadFresh();
+  }).catch(function () {});
+}
+
 /* 1분 넘게 다른 앱에 있다가 돌아오면 기록과 노트를 조용히 다시 받는다.
    바뀐 게 있으면 지금 화면 그대로 다시 그리고, 새 데이터를 이 페이지가 못 읽으면 새 페이지를 받는다 */
 let hiddenAt = 0;
@@ -2772,6 +2810,7 @@ document.addEventListener("visibilitychange", function () {
   if (document.hidden) { hiddenAt = Date.now(); return; }
   if (loadState !== "ready" || !hiddenAt || Date.now() - hiddenAt < 60000) return;
   hiddenAt = 0;
+  checkForNewVersion();
   Promise.all([fetchJSON("data/wines.json"), fetchJSON("data/notes.json")]).then(function (results) {
     const winesChanged = JSON.stringify(results[0]) !== JSON.stringify(baseWines);
     const notesText = JSON.stringify(results[1]);

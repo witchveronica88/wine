@@ -10,6 +10,7 @@ The owner wants every change live right away: commit and push straight to `main`
 Browsers may keep the previous `index.html` for up to 10 minutes after a deploy (GitHub Pages sends `max-age=600`), while `data/*.json` is always fetched fresh. So:
 - When the shape of a data file changes, the new `index.html` must still read the old shape, and the old shape should keep working for a while (prefer adding fields over renaming or removing them).
 - Refreshing: browser pull-to-refresh is blocked (`overscroll-behavior: none`) and the home-screen app has no reload button, so the app has its own pull-to-refresh: pulling down at the top and releasing past 72px reloads a fresh page (same `?r=…` URL as below) and keeps the current bottom tab. Coming back to the app after more than a minute re-fetches `wines.json` and `notes.json` quietly and redraws in place when something changed.
+- Old copies of the app: on start and on coming back, the app fetches `index.html?v=…` (no-store) and compares its `<style>` and `<script>` text with its own. If they differ, it reloads a fresh page (at most once per 5 minutes, sessionStorage `wine-stale-reload`). So a phone never stays on an old version for long; you don't need to bump any version number.
 - If loading fails, the app reloads itself once at a fresh URL (`?r=…`, guarded by sessionStorage `wine-fresh-reload`), then shows the error screen. 기록 never waits on `notes.json`: if only the notes fail, records still show and the note tabs say so.
 
 ## Layout
@@ -147,13 +148,13 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
 - Only one note is open at a time. Opening a note from a wine record switches to its tab, picks its group pill, opens the note and scrolls to it.
 - A collapsed note row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count). Never put the note text in a collapsed row; it shows at the top of the opened row.
 - Opened state: ＋ becomes －, the title color stays the same, only the title row gets `--disclosure-bg` across the full card width, a 3px `--accent` bar runs down the left edge of the opened range, and the title sticks just under the pill row (`--stick`). Tapping a stuck title to fold scrolls back to that title.
-- An opened note shows, in order: the one-line summary, the details in the label-column format (see the common format below), then "마셔 본 와인" with the linked wine records (only when there are any). The linked wines are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
-- Note details live in `data/notes.json` → `details.<kind>.<title>` as `[label, text]` pairs. 품종: 향과 맛 · 구조 · 주요 산지 · 음식. 산지: 기후와 땅 · 주요 품종 · 스타일 · 알아두기. 사전: 자세히 · 알아두기. One or two plain sentences each, ending in "~다." When adding a note, add its details too.
+- An opened note shows, in order: the one-line summary, the details in the label-column format (see the common format below), then the wines I've had with this grape or region (only when there are any), newest first. No heading: each row is the date (`--fs-s` gray, 84px column) then the wine name (`--fs-m` regular), and rows are divided by lines that run the full card width. No photo, no vintage, no bold, no arrow. The last row's line is the next note's line, so there is never a double line.
+- Note details live in `data/notes.json` → `details.<kind>.<title>` as `[label, text]` pairs. 품종: 향 · 구조 · 주요 산지 · 음식. 산지: 기후와 땅 · 주요 품종 · 스타일 · 알아두기. 사전: 자세히 · 알아두기. One or two plain sentences each, ending in "~다." When adding a note, add its details too.
 
 ### Links from a wine to its notes
 
 - In 지역 and 품종 facts the text stays as written, and only the part that names a note is shown in `--accent` color (no bold, no icon). Tapping it opens that note in its tab. Example: "토카이(토카이-헤저여)" → only "토카이" is colored.
-- Matching (`matchNotesInText`) checks each note's title, English name and aliases, ignoring spaces, "·", "-", "/" and brackets. When names overlap the longer one wins ("쁘띠 시라" beats "시라"), and each note is linked once, at its first appearance. The same matching decides which wines a note lists under "마셔 본 와인".
+- Matching (`matchNotesInText`) checks each note's title, English name and aliases, ignoring spaces, "·", "-", "/" and brackets. When names overlap the longer one wins ("쁘띠 시라" beats "시라"), and each note is linked once, at its first appearance. The same matching decides which wines an opened note lists.
 - Every grape and region in `data/wines.json` should link. When a new wine brings a grape or region with no note, add the note (row + details) to `data/notes.json`; when it is only a different spelling ("카버네 소비뇽", "비우라"), add an alias instead. Don't add an alias that names a wider area than the note ("토스카나" is not 키안티).
 
 ### 펼친 내용의 공통 서식 (노트 · 와인)
