@@ -1352,8 +1352,12 @@ let noteGroups = {}; /* tab key → [{ key, label, notes }] */
 function buildNotes(src) {
   varietyNotes = src.varietyRows.map(function (row, i) { return makeNote("varieties", i + 3, row[0], row[1], row[2], row[3].slice()); });
   regionNotes = src.regionRows.map(function (row) { return makeNote("regions", row[0], row[1], row[2], row[3], row[4].slice()); });
-  /* basicRows: [page, group, title, summary] */
-  basicNotes = src.basicRows.map(function (row) {
+  /* basicRows: [page, group, title, summary]. 예전 모양(basicTitles)도 읽는다 */
+  const basicRows = src.basicRows || (src.basicTitles || []).map(function (title, i) {
+    const n = i + 1;
+    return [n + 4, n <= 10 ? "종류" : n <= 20 ? "맛과 향" : n <= 27 ? "" : n <= 38 ? "마시기" : "용어", title, (src.basicSummaries || {})[title] || ""];
+  }).filter(function (row) { return row[1]; });
+  basicNotes = basicRows.map(function (row) {
     const note = makeNote("basics", row[0], row[2], "", row[3]);
     note.group = row[1];
     return note;
@@ -1415,6 +1419,7 @@ const LEGACY_KEY = "wine-records-v1";
 const LEGACY_SEED_MAX_ID = 26; /* v1 stored a full copy of wines 1–26 */
 let storageAvailable = true;
 let loadState = "loading"; /* loading | ready | error */
+let notesFailed = false; /* records still show when only the notes file fails */
 let baseWines = [];
 let local = { added: [], edited: {}, deleted: [] };
 let wines = [];
@@ -1495,12 +1500,26 @@ function commitLocal(change) {
   wines = mergedWines();
   return true;
 }
+/* 배포 직후에는 브라우저에 남은 예전 index.html(최대 10분)과 새 데이터가 안 맞을 수 있다.
+   불러오기에 실패하면 주소를 바꿔 새 페이지로 한 번만 다시 연다 */
+const RELOAD_KEY = "wine-fresh-reload";
+function reloadFresh() {
+  try { sessionStorage.setItem(RELOAD_KEY, "1"); } catch (e) {}
+  location.replace(location.pathname + "?r=" + Date.now());
+}
+function alreadyReloaded() {
+  try { return sessionStorage.getItem(RELOAD_KEY) === "1"; } catch (e) { return true; }
+}
 function loadData() {
   loadState = "loading";
   render();
-  Promise.all([fetchJSON("data/wines.json"), fetchJSON("data/notes.json")]).then(function (results) {
+  Promise.all([
+    fetchJSON("data/wines.json"),
+    fetchJSON("data/notes.json").then(function (src) { buildNotes(src); return true; }).catch(function () { return false; })
+  ]).then(function (results) {
+    if (!results[1] && !alreadyReloaded()) { reloadFresh(); return; }
+    notesFailed = !results[1];
     baseWines = results[0];
-    buildNotes(results[1]);
     const stored = readLocal();
     if (stored) {
       local = stored;
@@ -1513,8 +1532,11 @@ function loadData() {
     }
     wines = mergedWines();
     loadState = "ready";
+    try { sessionStorage.removeItem(RELOAD_KEY); } catch (e) {}
+    if (location.search) history.replaceState(history.state, "", location.pathname);
     render({ restoreScroll: true });
   }).catch(function () {
+    if (!alreadyReloaded()) { reloadFresh(); return; }
     loadState = "error";
     render();
   });
@@ -1911,6 +1933,10 @@ function notesHTML() {
 }
 function notesBodyHTML() {
   if (isSearching()) return searchResultsHTML();
+  if (notesFailed) {
+    return '<div class="fold-card"><div class="no-results"><p>노트를 불러오지 못했습니다.</p>'
+      + '<button class="text-button" data-action="retry-load">다시 시도</button></div></div>';
+  }
   return '<div class="notes-kinds" id="notes-kinds" role="group" aria-label="' + esc(currentNoteTab().label) + ' 묶음">' + notesKindsHTML() + "</div>"
     + '<section class="notes-results" id="notes-results">' + notesResultsHTML() + "</section>";
 }
@@ -2592,7 +2618,7 @@ appEl.addEventListener("click", function (event) {
   const target = event.target.closest("[data-action]");
   if (!target) return;
   const action = target.getAttribute("data-action");
-  if (action === "retry-load") loadData();
+  if (action === "retry-load") reloadFresh();
   else if (action === "toggle-wine") {
     const id = target.getAttribute("data-id");
     wineOpenId = wineOpenId === id ? null : id;

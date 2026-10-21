@@ -7,6 +7,10 @@ The UI is in Korean. Write user-facing text in Korean, matching the tone of the 
 
 The owner wants every change live right away: commit and push straight to `main`, without creating branches or pull requests. GitHub Pages deploys `main` within a minute or two.
 
+Browsers may keep the previous `index.html` for up to 10 minutes after a deploy (GitHub Pages sends `max-age=600`), while `data/*.json` is always fetched fresh. So:
+- When the shape of a data file changes, the new `index.html` must still read the old shape, and the old shape should keep working for a while (prefer adding fields over renaming or removing them).
+- If loading fails, the app reloads itself once at a fresh URL (`?r=…`, guarded by sessionStorage `wine-fresh-reload`), then shows the error screen. 기록 never waits on `notes.json`: if only the notes fail, records still show and the note tabs say so.
+
 ## Layout
 
 - `index.html`: the whole app (CSS + vanilla JS, no build step). At startup it loads `data/wines.json` and `data/notes.json` with `fetch`.
