@@ -1049,8 +1049,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .fold-row-copy small { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); overflow-wrap: anywhere; }
 .fold-sign { flex: 0 0 auto; display: grid; place-items: center; width: 24px; height: 24px; color: var(--dim); }
 .fold-sign svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.note-item.open { box-shadow: inset 3px 0 0 var(--accent); }
-.note-item.open > .fold-row {
+.note-group + .note-group { border-top: 1px solid var(--border); }
+.note-group { scroll-margin-top: var(--stick); }
+/* 첫 단계(묶음 줄, 묶음 없는 탭의 노트 줄): 카드 폭 전체 배경 + 펼친 범위 왼쪽 끝 컬러바 */
+.note-group.open,
+.note-item:not(.is-nested).open { box-shadow: inset 3px 0 0 var(--accent); }
+.note-group.open > .fold-row,
+.note-item:not(.is-nested).open > .fold-row {
   position: sticky;
   top: var(--stick);
   z-index: 3;
@@ -1058,8 +1063,26 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   box-shadow: inset 3px 0 0 var(--accent), 0 1px 0 var(--border);
 }
 .note-content { padding: 14px var(--card-pad) var(--card-pad); }
-.note-lead { margin: 0 0 16px; font-size: var(--fs-m); line-height: var(--lh-m); }
-.note-linked-wines { margin: 0 0 16px; }
+/* 안쪽 단계(묶음 안의 노트 줄): 안쪽 폭에만 배경, 컬러바 없음, 펼친 내용은 회색 안내선을 두고 들여 쓴다 */
+.note-group-body { padding: 4px var(--card-pad) 12px; }
+.note-item.is-nested { scroll-margin-top: calc(var(--stick) + 52px); }
+.note-item.is-nested > .fold-row { padding: 12px 0; background: transparent; }
+.note-item.is-nested.open > .fold-row {
+  position: sticky;
+  top: calc(var(--stick) + 52px);
+  z-index: 2;
+  width: calc(100% + 24px);
+  margin: 0 -12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--disclosure-bg);
+  box-shadow: 0 0 0 5px var(--surface);
+}
+.note-item.is-nested > .note-content { margin: 4px 0 8px; padding: 8px 0 8px 14px; border-left: 2px solid var(--border); }
+.note-lead + .note-linked-wines { margin-top: 16px; }
+.note-lead { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); }
+.note-linked-wines { margin: 0; }
+.note-pages:not(:empty) { margin-top: 16px; }
 .note-linked-wines h3 { margin: 0 0 4px; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
 .note-linked-wines > p { margin: 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
 .note-linked-wine-list > button {
@@ -1124,25 +1147,48 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .wine-card .results-bar { margin: 6px 0 0; }
 .wine-card .results-bar > span { min-width: 0; }
 .wine-card .wine-list { display: block; margin: 0; }
-.wine-card .wine-list-entry + .wine-list-entry,
-.wine-card .wine-list-entry.same-date { margin-top: 0; border-top: 1px solid var(--border); }
-.wine-card .wine-date-divider { margin: 0; padding: 10px var(--card-pad) 0; }
-.wine-card .wine-date-divider::after { display: none; }
+.wine-card .wine-list-entry + .wine-list-entry { margin-top: 0; border-top: 1px solid var(--border); }
+.wine-year { padding: 12px var(--card-pad) 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
 .wine-card .wine-row {
-  grid-template-columns: 56px minmax(0, 1fr) 16px;
-  gap: 12px;
+  width: 100%;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
   padding: 12px var(--card-pad);
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  color: var(--text);
+  text-align: left;
 }
-.wine-card .wine-thumb { width: 56px; height: 72px; }
-.wine-card .wine-row h3 { font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
+.wine-card .wine-row:active { background: color-mix(in srgb, var(--border) 30%, transparent); }
+.wine-card .wine-thumb {
+  width: 40px;
+  height: 56px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px color-mix(in srgb, #000 18%, transparent);
+}
+.wine-card .wine-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center 55%; border-radius: inherit; }
+.wine-row-copy { min-width: 0; display: grid; gap: 2px; }
+.wine-row-name { font-size: var(--fs-m); line-height: var(--lh-s); font-weight: 700; overflow-wrap: anywhere; }
+.wine-row-meta { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); overflow-wrap: anywhere; }
+.wine-row-meta .wine-mark { display: inline-block; width: 8px; height: 8px; margin-right: 6px; vertical-align: 1px; }
+.wine-row-meta .local-badge { margin-left: 6px; }
+.wine-row-side { align-self: start; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-top: 1px; }
+.wine-row-date { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wine-card .row-arrow svg { width: 16px; height: 16px; }
 .wine-card .no-results { padding: 32px var(--card-pad); }
 @media (max-width: 420px) {
   .type-filter { margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; }
 }
+
+/* 상세 점수: 상자 대신 가는 선으로 나눈 줄 */
+.scores-list { gap: 0; border-top: 1px solid var(--border); }
+.score-row,
+.score-row.vivino-score { min-height: 0; padding: 12px 0; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; box-shadow: none; }
     </style>
   </head>
   <body>
@@ -1238,15 +1284,11 @@ let regionNotes = [];
 let basicNotes = [];
 let allWineNotes = [];
 /* 와인 노트 탭: 품종은 레드 · 화이트로, 산지는 나라별로 나눈다 */
+/* 와인 노트: 탭(품종 · 산지 · 기초 개념) → 묶음(레드 · 화이트 / 나라) → 노트 */
 const noteTabs = [
-  { key: "red", label: "레드 품종", intro: "레드 와인을 만드는 품종과 내가 마셔 본 와인" },
-  { key: "white", label: "화이트 품종", intro: "화이트 와인을 만드는 품종과 내가 마셔 본 와인" },
-  { key: "france", label: "프랑스", intro: "프랑스 산지와 내가 마셔 본 와인" },
-  { key: "italy", label: "이탈리아", intro: "이탈리아 산지와 내가 마셔 본 와인" },
-  { key: "iberia", label: "스페인 · 포르투갈", intro: "스페인 · 포르투갈 산지와 내가 마셔 본 와인" },
-  { key: "central", label: "독일 · 오스트리아 · 헝가리", intro: "독일 · 오스트리아 · 헝가리 산지와 내가 마셔 본 와인" },
-  { key: "newworld", label: "신대륙", intro: "미국 · 남미 · 호주 등 신대륙 산지와 내가 마셔 본 와인" },
-  { key: "basics", label: "기초 개념", intro: "와인을 이해하고 표현하는 기초 개념" }
+  { key: "varieties", label: "품종", intro: "레드 · 화이트로 나눈 품종과 내가 마셔 본 와인", unit: "종" },
+  { key: "regions", label: "산지", intro: "나라별로 나눈 산지와 내가 마셔 본 와인", unit: "곳" },
+  { key: "basics", label: "기초 개념", intro: "와인을 이해하고 표현하는 기초 개념", unit: "개" }
 ];
 const whiteVarieties = ["샤르도네", "소비뇽 블랑", "리슬링", "슈냉 블랑", "세미용", "비오니에", "게뷔르츠트라미너", "피노 그리", "알바리뇨", "그뤼너 벨트리너", "가르가네가", "모스카토", "팔로미노"];
 /* 산지 노트 번호(p-NN) → 나라 */
@@ -1261,8 +1303,8 @@ function regionCountry(pageNumber) {
   if (pageNumber <= 39) return "미국";
   return { 40: "아르헨티나", 41: "칠레", 42: "호주", 43: "호주", 44: "뉴질랜드", 45: "남아공" }[pageNumber] || "";
 }
-const countryTab = { "프랑스": "france", "이탈리아": "italy", "스페인": "iberia", "포르투갈": "iberia", "독일": "central", "오스트리아": "central", "헝가리": "central" };
 let noteCollections = {};
+let noteGroups = {}; /* tab key → [{ key, label, notes }] */
 function buildNotes(src) {
   varietyNotes = src.varietyRows.map(function (row, i) { return makeNote("varieties", i + 3, row[0], row[1], row[2], row[3].slice()); });
   regionNotes = src.regionRows.map(function (row) { return makeNote("regions", row[0], row[1], row[2], row[3], row[4].slice()); });
@@ -1270,14 +1312,19 @@ function buildNotes(src) {
     return makeNote("basics", i + 5, title, String(i + 1).padStart(2, "0"), src.basicSummaries[title] || "와인을 이해하고 표현하는 데 필요한 핵심 개념.");
   });
   allWineNotes = varietyNotes.concat(regionNotes, basicNotes);
-  varietyNotes.forEach(function (note) { note.tab = whiteVarieties.indexOf(note.title) === -1 ? "red" : "white"; });
-  regionNotes.forEach(function (note) {
-    note.country = regionCountry(Number(note.id.split("-")[1]));
-    note.tab = countryTab[note.country] || "newworld";
+  varietyNotes.forEach(function (note) { note.group = whiteVarieties.indexOf(note.title) === -1 ? "레드 품종" : "화이트 품종"; });
+  regionNotes.forEach(function (note) { note.group = regionCountry(Number(note.id.split("-")[1])) || "기타"; });
+  noteCollections = { varieties: varietyNotes, regions: regionNotes, basics: basicNotes };
+  noteGroups = { varieties: groupNotes(varietyNotes), regions: groupNotes(regionNotes), basics: [] };
+}
+function groupNotes(notes) {
+  const groups = [];
+  notes.forEach(function (note) {
+    let group = groups.find(function (g) { return g.key === note.group; });
+    if (!group) { group = { key: note.group, label: note.group, notes: [] }; groups.push(group); }
+    group.notes.push(note);
   });
-  basicNotes.forEach(function (note) { note.tab = "basics"; });
-  noteCollections = {};
-  noteTabs.forEach(function (tab) { noteCollections[tab.key] = allWineNotes.filter(function (note) { return note.tab === tab.key; }); });
+  return groups;
 }
 
 function findWineNotes(value, kind) {
@@ -1447,6 +1494,7 @@ let notesKind = (function () {
 function rememberNotesKind() { try { localStorage.setItem(NOTES_KIND_KEY, notesKind); } catch (e) {} }
 let notesQuery = "";
 let notesOpenId = null;
+let notesOpenGroup = null;
 let form = null;
 let formPhoto = null; /* null = unchanged; {photo_url, photo_thumbnail_url} = new photo; "removed" */
 let formError = "";
@@ -1592,26 +1640,26 @@ function filteredWines() {
   return matched;
 }
 
-function wineRowHTML(wine) {
+/* 와인 한 줄 (프린세스 책 줄과 같은 짜임): 작은 사진 · 이름 · 회색 한 줄, 오른쪽에 날짜와 › */
+function wineRowHTML(wine, withYear) {
   const thumb = wine.photo_thumbnail_url || wine.photo_url
-    ? '<img src="' + esc(wine.photo_thumbnail_url || wine.photo_url) + '" loading="lazy" decoding="async" alt="' + esc(wine.name) + ' 라벨" />'
+    ? '<img src="' + esc(wine.photo_thumbnail_url || wine.photo_url) + '" loading="lazy" decoding="async" alt="" />'
     : wineMarkHTML(wine.wine_type);
-  const origin = [wine.country, listGrapeLabel(wine)].filter(Boolean).join(" · ");
-  let glance = "";
-  if (wine.rating !== null && wine.rating !== undefined) glance += starsHTML(wine.rating);
-  if (wine.consumed_date && sortMode !== "recent") glance += "<span>" + esc(formatDate(wine.consumed_date)) + "</span>";
+  const meta = [typeLabels[wine.wine_type] || "", wine.vintage ? vintageLabel(wine.vintage) : "", wine.country].filter(Boolean).join(" · ");
   const ariaLabel = (wine.vintage ? vintageLabel(wine.vintage) + " " : "") + wine.name + " 기록 열기";
   return '<button class="wine-row" data-action="open-detail" data-id="' + esc(wine.id) + '" aria-label="' + esc(ariaLabel) + '">'
-    + '<div class="wine-thumb">' + thumb + "</div>"
-    + '<div class="wine-row-copy">'
-    + '<div class="wine-row-top"><span class="wine-kind">' + wineMarkHTML(wine.wine_type) + esc(typeLabels[wine.wine_type]) + "</span>"
-    + (wine.vintage ? '<span class="wine-vintage">' + esc(vintageLabel(wine.vintage)) + "</span>" : "") + localBadgeHTML(wine) + "</div>"
-    + "<h3>" + esc(wine.name) + "</h3>"
-    + (origin ? '<p class="wine-origin">' + esc(origin) + "</p>" : "")
-    + (glance ? '<div class="wine-row-glance">' + glance + "</div>" : "")
-    + "</div>"
-    + '<span class="row-arrow">' + ICON_ARROW + "</span>"
+    + '<span class="wine-thumb">' + thumb + "</span>"
+    + '<span class="wine-row-copy"><strong class="wine-row-name">' + esc(wine.name) + "</strong>"
+    + '<span class="wine-row-meta">' + wineMarkHTML(wine.wine_type) + esc(meta) + localBadgeHTML(wine) + "</span></span>"
+    + '<span class="wine-row-side">' + (wine.consumed_date ? '<span class="wine-row-date">' + esc(shortDate(wine.consumed_date, withYear)) + "</span>" : "")
+    + '<span class="row-arrow">' + ICON_ARROW + "</span></span>"
     + "</button>";
+}
+/* 날짜순일 때는 연도 줄이 따로 있으니 월.일만, 아니면 26.10.5처럼 연도를 붙인다 */
+function shortDate(date, withYear) {
+  const parts = String(date).split("-");
+  if (!parts[0] || !parts[1] || !parts[2]) return date;
+  return (withYear ? parts[0].slice(2) + "." : "") + Number(parts[1]) + "." + Number(parts[2]);
 }
 
 function localBadgeHTML(wine) {
@@ -1639,13 +1687,13 @@ function wineListHTML(list) {
   }
   let html = '<div class="wine-list">';
   list.forEach(function (wine, index) {
+    const byDate = sortMode === "recent" && Boolean(wine.consumed_date);
+    const year = byDate ? wine.consumed_date.slice(0, 4) : "";
     const prev = index > 0 ? list[index - 1] : null;
-    const grouping = sortMode === "recent" && Boolean(wine.consumed_date);
-    const sameDate = grouping && prev && prev.consumed_date === wine.consumed_date;
-    const showDivider = grouping && !sameDate;
-    html += '<div class="wine-list-entry' + (sameDate ? " same-date" : "") + '">'
-      + (showDivider ? '<div class="wine-date-divider"><span>' + esc(formatDate(wine.consumed_date)) + "</span></div>" : "")
-      + wineRowHTML(wine)
+    const newYear = byDate && (!prev || !prev.consumed_date || prev.consumed_date.slice(0, 4) !== year);
+    html += '<div class="wine-list-entry">'
+      + (newYear ? '<div class="wine-year">' + esc(year) + "년</div>" : "")
+      + wineRowHTML(wine, !byDate)
       + "</div>";
   });
   return html + "</div>";
@@ -1754,64 +1802,93 @@ function notesHTML() {
   html += bottomNavHTML();
   return html;
 }
+/* 접거나 펼친 뒤 그 줄이 위에 붙은 줄 뒤로 숨었으면 제목 자리로 돌아간다 */
+function keepNoteRowInView(item) {
+  if (!item) return;
+  const tabs = document.getElementById("notes-kinds");
+  let stick = tabs ? tabs.getBoundingClientRect().bottom : 0;
+  const group = item.classList.contains("is-nested") ? item.closest(".note-group") : null;
+  if (group) stick += group.querySelector(".fold-row").offsetHeight;
+  const top = item.getBoundingClientRect().top;
+  if (top < stick) window.scrollTo(0, window.scrollY + top - stick);
+}
 function currentNoteTab() {
   return noteTabs.find(function (tab) { return tab.key === notesKind; }) || noteTabs[0];
 }
-function noteRowSummary(note, linkedCount) {
+function noteRowSummary(note, linkedCount, showGroup) {
   if (note.kind === "basics") return "";
-  return [note.tab === "newworld" || note.tab === "iberia" || note.tab === "central" ? note.country : "", note.subtitle || "", linkedCount ? "기록 " + linkedCount + "병" : ""].filter(Boolean).join(" · ");
+  return [showGroup && note.kind === "regions" ? note.group : "", note.subtitle || "", linkedCount ? "기록 " + linkedCount + "병" : ""].filter(Boolean).join(" · ");
+}
+/* 노트 한 줄. nested면 묶음 안쪽 줄(안쪽 폭 배경, 컬러바 없음, 펼친 내용은 들여 쓴다) */
+function noteItemHTML(note, nested) {
+  const isOpen = notesOpenId === note.id;
+  const linked = linkedWinesFor(note);
+  const summary = noteRowSummary(note, linked.length, !nested);
+  let html = '<article class="note-item' + (nested ? " is-nested" : "") + (isOpen ? " open" : "") + '" id="note-' + note.id + '">'
+    + '<button class="fold-row" data-action="toggle-note" data-id="' + note.id + '" aria-expanded="' + isOpen + '" aria-controls="note-pages-' + note.id + '">'
+    + '<span class="fold-row-copy"><strong>' + esc(note.title) + "</strong>"
+    + (summary ? "<small>" + esc(summary) + "</small>" : "")
+    + '</span><span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span>"
+    + "</button>";
+  if (isOpen) {
+    html += '<div class="note-content" id="note-pages-' + note.id + '">';
+    html += '<p class="note-lead">' + esc(note.summary) + "</p>";
+    if (note.kind !== "basics") {
+      html += '<section class="note-linked-wines" aria-label="' + esc(note.title) + '와 연결된 와인 기록"><h3>' + (note.kind === "varieties" ? "이 품종의 와인 기록" : "이 산지의 와인 기록") + "</h3>";
+      if (linked.length > 0) {
+        html += '<div class="note-linked-wine-list">';
+        linked.forEach(function (wine) {
+          html += '<button data-action="open-linked-wine" data-id="' + esc(wine.id) + '" aria-label="' + esc(wine.name) + ' 상세 보기">'
+            + (wine.photo_thumbnail_url ? '<img src="' + esc(wine.photo_thumbnail_url) + '" loading="lazy" decoding="async" alt="" />' : '<span class="linked-wine-mark wine-mark--' + esc(wine.wine_type) + '" aria-hidden="true"></span>')
+            + "<span><strong>" + esc(wine.name) + "</strong>"
+            + (wine.consumed_date ? "<small>" + esc(formatDate(wine.consumed_date)) + "</small>" : "")
+            + "</span>"
+            + (wine.vintage ? '<span class="linked-wine-year">' + esc(wine.vintage) + "</span>" : "<span></span>")
+            + '<span class="linked-wine-arrow" aria-hidden="true">›</span></button>';
+        });
+        html += "</div>";
+      } else {
+        html += "<p>아직 연결된 와인 기록이 없습니다.</p>";
+      }
+      html += "</section>";
+    }
+    html += '<div class="note-pages">';
+    note.pages.filter(Boolean).forEach(function (pageUrl, index) {
+      const alt = (note.title + " 설명 " + (note.pages.length > 1 ? (index + 1) + "쪽" : "")).trim();
+      html += pinchZoomHTML(pageUrl, pageUrl, alt, "page");
+    });
+    html += "</div></div>";
+  }
+  return html + "</article>";
 }
 function notesResultsHTML() {
   const list = visibleNotes();
   const searching = Boolean(notesQuery.trim());
+  const tab = currentNoteTab();
   let html = '<div class="fold-card notes-card">'
     + '<header class="fold-head"><div class="fold-title"><h2>'
-    + (searching ? "‘" + esc(notesQuery.trim()) + "’ 검색 결과" : esc(currentNoteTab().label))
-    + '</h2><span class="count-badge" aria-live="polite">' + list.length + "개</span></div>"
-    + "<p>" + (searching ? "품종 · 산지 · 기초 개념에서 찾은 노트" : esc(currentNoteTab().intro)) + "</p></header>";
+    + (searching ? "‘" + esc(notesQuery.trim()) + "’ 검색 결과" : esc(tab.label))
+    + '</h2><span class="count-badge" aria-live="polite">' + list.length + (searching ? "개" : tab.unit) + "</span></div>"
+    + "<p>" + (searching ? "품종 · 산지 · 기초 개념에서 찾은 노트" : esc(tab.intro)) + "</p></header>";
+  const groups = searching ? [] : noteGroups[notesKind] || [];
   if (list.length === 0) {
     html += '<div class="no-results"><p>일치하는 노트가 없습니다.</p><button class="text-button" data-action="clear-notes-search">검색어 지우기</button></div>';
+  } else if (groups.length === 0) {
+    list.forEach(function (note) { html += noteItemHTML(note, false); });
   } else {
-    list.forEach(function (note) {
-      const isOpen = notesOpenId === note.id;
-      const linked = linkedWinesFor(note);
-      const summary = noteRowSummary(note, linked.length);
-      html += '<article class="note-item' + (isOpen ? " open" : "") + '" id="note-' + note.id + '">'
-        + '<button class="fold-row" data-action="toggle-note" data-id="' + note.id + '" aria-expanded="' + isOpen + '" aria-controls="note-pages-' + note.id + '">'
-        + '<span class="fold-row-copy"><strong>' + esc(note.title) + "</strong>"
-        + (summary ? "<small>" + esc(summary) + "</small>" : "")
-        + '</span><span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span>"
-        + "</button>";
+    groups.forEach(function (group) {
+      const isOpen = notesOpenGroup === group.key;
+      const groupId = "note-group-" + groups.indexOf(group);
+      html += '<section class="note-group' + (isOpen ? " open" : "") + '" id="' + groupId + '">'
+        + '<button class="fold-row" data-action="toggle-note-group" data-group="' + esc(group.key) + '" data-target="' + groupId + '" aria-expanded="' + isOpen + '">'
+        + '<span class="fold-row-copy"><strong>' + esc(group.label) + "</strong><small>" + group.notes.length + tab.unit + "</small></span>"
+        + '<span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span></button>";
       if (isOpen) {
-        html += '<div class="note-content" id="note-pages-' + note.id + '">';
-        html += '<p class="note-lead">' + esc(note.summary) + "</p>";
-        if (note.kind !== "basics") {
-          html += '<section class="note-linked-wines" aria-label="' + esc(note.title) + '와 연결된 와인 기록"><h3>' + (note.kind === "varieties" ? "이 품종의 와인 기록" : "이 산지의 와인 기록") + "</h3>";
-          if (linked.length > 0) {
-            html += '<div class="note-linked-wine-list">';
-            linked.forEach(function (wine) {
-              html += '<button data-action="open-linked-wine" data-id="' + esc(wine.id) + '" aria-label="' + esc(wine.name) + ' 상세 보기">'
-                + (wine.photo_thumbnail_url ? '<img src="' + esc(wine.photo_thumbnail_url) + '" loading="lazy" decoding="async" alt="" />' : '<span class="linked-wine-mark wine-mark--' + esc(wine.wine_type) + '" aria-hidden="true"></span>')
-                + "<span><strong>" + esc(wine.name) + "</strong>"
-                + (wine.consumed_date ? "<small>" + esc(formatDate(wine.consumed_date)) + "</small>" : "")
-                + "</span>"
-                + (wine.vintage ? '<span class="linked-wine-year">' + esc(wine.vintage) + "</span>" : "<span></span>")
-                + '<span class="linked-wine-arrow" aria-hidden="true">›</span></button>';
-            });
-            html += "</div>";
-          } else {
-            html += "<p>아직 연결된 와인 기록이 없습니다.</p>";
-          }
-          html += "</section>";
-        }
-        html += '<div class="note-pages">';
-        note.pages.filter(Boolean).forEach(function (pageUrl, index) {
-          const alt = (note.title + " 설명 " + (note.pages.length > 1 ? (index + 1) + "쪽" : "")).trim();
-          html += pinchZoomHTML(pageUrl, pageUrl, alt, "page");
-        });
-        html += "</div></div>";
+        html += '<div class="note-group-body">';
+        group.notes.forEach(function (note) { html += noteItemHTML(note, true); });
+        html += "</div>";
       }
-      html += "</article>";
+      html += "</section>";
     });
   }
   return html + "</div>";
@@ -2312,8 +2389,9 @@ function openWineNote(noteId) {
   view = "collection";
   activeTab = "notes";
   notesQuery = "";
-  notesKind = note.tab;
+  notesKind = note.kind;
   rememberNotesKind();
+  notesOpenGroup = note.group || null;
   notesOpenId = note.id;
   render({ restoreScroll: true });
   window.setTimeout(function () {
@@ -2452,6 +2530,7 @@ appEl.addEventListener("click", function (event) {
     rememberNotesKind();
     notesQuery = "";
     notesOpenId = null;
+    notesOpenGroup = null;
     render();
     window.scrollTo({ top: 1, behavior: "smooth" });
   }
@@ -2459,14 +2538,15 @@ appEl.addEventListener("click", function (event) {
     const id = target.getAttribute("data-id");
     notesOpenId = notesOpenId === id ? null : id;
     render({ keepScroll: true });
-    /* 접거나 펼친 뒤 그 줄이 탭 줄 뒤로 숨었으면 제목 자리로 돌아간다 */
-    const item = document.getElementById("note-" + id);
-    const tabs = document.getElementById("notes-kinds");
-    if (item) {
-      const stick = tabs ? tabs.getBoundingClientRect().bottom : 0;
-      const top = item.getBoundingClientRect().top;
-      if (top < stick) window.scrollTo(0, window.scrollY + top - stick);
-    }
+    keepNoteRowInView(document.getElementById("note-" + id));
+  }
+  else if (action === "toggle-note-group") {
+    const key = target.getAttribute("data-group");
+    const groupId = target.getAttribute("data-target");
+    notesOpenGroup = notesOpenGroup === key ? null : key;
+    notesOpenId = null;
+    render({ keepScroll: true });
+    keepNoteRowInView(document.getElementById(groupId));
   }
   else if (action === "open-note") openWineNote(target.getAttribute("data-note-id"));
   else if (action === "open-linked-wine") openDetail(target.getAttribute("data-id"));
