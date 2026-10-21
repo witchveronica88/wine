@@ -132,8 +132,9 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
 
 An opened note and an opened wine use the same pieces, so the same kind of text always looks the same:
 
-- **One-line summary** at the top: `--fs-m` bold, 16px above the next part. Note → `summary`; wine → first line of `buy_verdict`.
-- **Text items** (`textItemsHTML`, `.text-items`): a gray `--fs-s` bold label on its own line, the text in `--fs-m` right below (2px gap), 14px between items. No dividers, no boxes. Used for note details and the wine's 시음 노트. A bar chart (the wine's 구조) is one item whose text is the bars.
+- **One-line summary** at the top: `--fs-m` regular weight, 16px above the next part. Note → `summary`; wine → first line of `buy_verdict`. Bold is kept for item names only.
+- **Text items** (`textItemsHTML`, `.text-items`): the item name in `--fs-m` bold, normal text color, on its own line like a small heading; the text in `--fs-m` regular right below (4px gap); 18px between items. No dividers, no boxes. Used for note details and the wine's 시음 노트.
+- Anything inside an item sits one step lower: gray `--fs-s` regular. The wine's 구조 item holds thin bars (6px) with gray `--fs-s` names (당도 · 산도 · 타닌 · 바디 · 여운) and gray numbers, so they never look like item names.
 - **Short facts** (`.wine-facts`): label and value on one line, label `--fs-s` gray bold in a 56px column. Only for one-line facts (생산자, 도수 …), never prose.
 - **Bullets** (`.note-list`): one fact per bullet, accent markers.
 - Same idea, same label in both places: 구조 (note text / wine bars) and 음식 (note text / wine `food_pairing`). Use these names; don't say 페어링 in one place and 음식 in another.
@@ -143,7 +144,7 @@ An opened note and an opened wine use the same pieces, so the same kind of text 
 Every opened wine uses the same order. Skip any part that has no data.
 
 1. Bottle photo (`photo_url`), with pinch zoom.
-2. One-line verdict: the first line of `buy_verdict`, `--fs-m` bold.
+2. One-line verdict: the first line of `buy_verdict` (the one-line summary format above).
 3. Basic facts, always visible: short-fact rows (see the common format above), no dividers. Order: 생산자 · 지역 · 품종 · 도수 · 용량 · 마신 날 · 구매 (price · place) · 내 별점. 나라 and 빈티지 are left out because the sticky wine row above already shows type · vintage · country. 지역 and 품종 link to their study notes. Short facts only, never prose.
 4. Inner ＋ rows, closed by default, in this order:
    - 내 메모 (`personal_notes`)
