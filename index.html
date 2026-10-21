@@ -1066,7 +1066,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .note-group-label { padding: 12px var(--card-pad) 4px; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
 .note-item + .note-group-label { border-top: 1px solid var(--border); }
 .note-lead + .note-linked-wines { margin-top: 16px; }
-.note-lead { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); }
+/* 펼친 항목 맨 위 한 줄 요약은 노트 · 와인 모두 굵게 (.wine-verdict와 같은 서식) */
+.note-lead { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
 .note-linked-wines { margin: 0; }
 .note-pages > .pinch-image:first-child { margin-top: 16px; }
 .pinch-image.is-pending { display: none; }
@@ -1194,13 +1195,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .wine-photo .pinch-image-frame,
 .wine-photo img { background: transparent; border: 0; }
 .wine-photo .pinch-image--contain img { padding: 0; }
-.wine-verdict { margin: 0 0 14px; font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
+.wine-verdict { margin: 0 0 16px; font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
 .wine-facts { display: grid; gap: 6px; margin: 0; }
 .wine-facts .fact { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: baseline; }
-.wine-facts .fact dt { margin: 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 400; }
+.wine-facts .fact dt { margin: 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
 .wine-facts .fact dd { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); }
-.wine-facts--stack { gap: 12px; }
-.wine-facts--stack .fact { grid-template-columns: 1fr; gap: 2px; }
 .wine-prose { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); white-space: pre-wrap; }
 .wine-sections { margin-top: 16px; border-top: 1px solid var(--border); }
 .wine-section + .wine-section { border-top: 1px solid var(--border); }
@@ -1270,18 +1269,20 @@ main.is-searching { --stick: 0px; }
 .wine-list-head .sort-control select { padding-top: 4px; padding-bottom: 4px; font-size: var(--fs-s); line-height: var(--lh-s); }
 .wine-rate-date { margin: 10px 0 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
 /* 펼친 노트의 자세한 내용: 회색 이름표 아래 본문 */
-.note-details { display: grid; gap: 14px; margin: 16px 0 0; }
-.note-details > div { display: grid; gap: 2px; }
-.note-details dt { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
-.note-details dd { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); }
-.note-details + .note-linked-wines { margin-top: 20px; }
+/* 글 항목(공통): 노트 자세한 내용, 와인 시음 노트 */
+.text-items { display: grid; gap: 14px; margin: 0; }
+.text-items > div { min-width: 0; display: grid; gap: 2px; }
+.text-items dt { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
+.text-items dd { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); overflow-wrap: anywhere; }
+.text-items .taste-bars { margin-top: 6px; }
+.note-lead + .text-items { margin-top: 16px; }
+.text-items + .note-linked-wines { margin-top: 20px; }
 .note-group-label:first-child { padding-top: 14px; }
 
 /* 시음 노트 안의 맛 막대: 이름표는 다른 회색 이름표와 같게, 글과는 한 칸 띄운다 */
 .wine-section-body .taste-bars { gap: 10px; }
 .wine-section-body .taste-bar-row > span { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
 .wine-section-body .taste-bar-row > b { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 650; }
-.wine-section-body .taste-bars + .wine-facts { margin-top: 20px; }
 
 .search-label { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
 /* 점수: 출처와 점수를 한 줄에, 나머지는 회색 한 줄 */
@@ -2051,7 +2052,7 @@ function noteItemHTML(note) {
     html += '<div class="note-content" id="note-pages-' + note.id + '">';
     html += '<p class="note-lead">' + esc(note.summary) + "</p>";
     if (note.details.length > 0) {
-      html += '<dl class="note-details">' + note.details.map(function (d) { return "<div><dt>" + esc(d[0]) + "</dt><dd>" + esc(d[1]) + "</dd></div>"; }).join("") + "</dl>";
+      html += textItemsHTML(note.details.map(function (d) { return [d[0], esc(d[1])]; }));
     }
     if (linked.length > 0) {
       html += '<section class="note-linked-wines" aria-label="' + esc(note.title) + '와 연결된 와인 기록"><h3>마셔 본 와인</h3><div class="note-linked-wine-list">';
@@ -2096,6 +2097,10 @@ function notesResultsHTML() {
 /* ================= detail view ================= */
 function factHTML(label, inner) {
   return '<div class="fact"><dt>' + esc(label) + "</dt><dd>" + inner + "</dd></div>";
+}
+/* 글 항목(공통 서식): 회색 굵은 이름 아래에 본문. 노트 자세한 내용과 와인 시음 노트가 같이 쓴다 */
+function textItemsHTML(rows) {
+  return '<dl class="text-items">' + rows.map(function (r) { return "<div><dt>" + esc(r[0]) + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>";
 }
 function tasteBarHTML(label, value) {
   return '<div class="taste-bar-row" aria-label="' + esc(label) + " 5단계 중 " + value + '"><span>' + esc(label) + '</span><div class="taste-track" aria-hidden="true"><i style="width: ' + value * 20 + '%"></i></div><b>' + value + "</b></div>";
@@ -2161,13 +2166,12 @@ function wineBodyHTML(wine) {
   if (aroma.text) tastingRows.push(["향", "<span>" + esc(aroma.text) + "</span>" + (aromaCaveat ? '<small class="source-caveat">' + esc(aromaCaveat) + "</small>" : "")]);
   if (taste.text) tastingRows.push(["맛", "<span>" + esc(taste.text) + "</span>" + (tasteCaveat ? '<small class="source-caveat">' + esc(tasteCaveat) + "</small>" : "")]);
   if (wine.finish) tastingRows.push(["여운", esc(wine.finish)]);
-  if (wine.food_pairing) tastingRows.push(["페어링", esc(wine.food_pairing)]);
-  /* 맛 막대(당도 · 산도 · 타닌 · 바디 · 여운)와 시음 글을 한 줄에 모은다 */
-  if (tastingRows.length > 0 || tasteMetrics.length > 0) {
-    sections += wineSectionHTML(wine, "tasting", "시음 노트", "",
-      (tasteMetrics.length > 0 ? '<div class="taste-bars">' + tasteMetrics.map(function (m) { return tasteBarHTML(m.label, m.value); }).join("") + "</div>" : "")
-      + (tastingRows.length > 0 ? '<dl class="wine-facts wine-facts--stack">' + tastingRows.map(function (r) { return factHTML(r[0], r[1]); }).join("") + "</dl>" : ""));
+  /* 품종 노트와 같은 이름(구조 · 음식)을 쓰고, 맛 막대는 "구조" 항목으로 넣는다 */
+  if (tasteMetrics.length > 0) {
+    tastingRows.splice(Math.min(2, tastingRows.length), 0, ["구조", '<div class="taste-bars">' + tasteMetrics.map(function (m) { return tasteBarHTML(m.label, m.value); }).join("") + "</div>"]);
   }
+  if (wine.food_pairing) tastingRows.push(["음식", esc(wine.food_pairing)]);
+  if (tastingRows.length > 0) sections += wineSectionHTML(wine, "tasting", "시음 노트", "", textItemsHTML(tastingRows));
   if (wine.scores && wine.scores.length > 0) {
     let scoresHTML = '<div class="score-items">';
     wine.scores.forEach(function (score) {

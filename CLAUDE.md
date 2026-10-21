@@ -119,7 +119,7 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
 - Only one note is open at a time. Opening a note from a wine record switches to its tab, picks its group pill, opens the note and scrolls to it.
 - A collapsed note row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count). Never put the note text in a collapsed row; it shows at the top of the opened row.
 - Opened state: ＋ becomes －, the title color stays the same, only the title row gets `--disclosure-bg` across the full card width, a 3px `--accent` bar runs down the left edge of the opened range, and the title sticks just under the pill row (`--stick`). Tapping a stuck title to fold scrolls back to that title.
-- An opened note shows, in order: the one-line summary, the details (each a gray `--fs-s` label above `--fs-m` text), then "마셔 본 와인" with the linked wine records (only when there are any). The linked wines are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
+- An opened note shows, in order: the one-line summary, the details as text items (see the common format below), then "마셔 본 와인" with the linked wine records (only when there are any). The linked wines are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
 - Note details live in `data/notes.json` → `details.<kind>.<title>` as `[label, text]` pairs. 품종: 향과 맛 · 구조 · 주요 산지 · 음식. 산지: 기후와 땅 · 주요 품종 · 스타일 · 알아두기. 사전: 자세히 · 알아두기. One or two plain sentences each, ending in "~다." When adding a note, add its details too.
 
 ### Links from a wine to its notes
@@ -128,16 +128,26 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
 - Matching (`matchNotesInText`) checks each note's title, English name and aliases, ignoring spaces, "·", "-", "/" and brackets. When names overlap the longer one wins ("쁘띠 시라" beats "시라"), and each note is linked once, at its first appearance. The same matching decides which wines a note lists under "마셔 본 와인".
 - Every grape and region in `data/wines.json` should link. When a new wine brings a grape or region with no note, add the note (row + details) to `data/notes.json`; when it is only a different spelling ("카버네 소비뇽", "비우라"), add an alias instead. Don't add an alias that names a wider area than the note ("토스카나" is not 키안티).
 
+### 펼친 내용의 공통 서식 (노트 · 와인)
+
+An opened note and an opened wine use the same pieces, so the same kind of text always looks the same:
+
+- **One-line summary** at the top: `--fs-m` bold, 16px above the next part. Note → `summary`; wine → first line of `buy_verdict`.
+- **Text items** (`textItemsHTML`, `.text-items`): a gray `--fs-s` bold label on its own line, the text in `--fs-m` right below (2px gap), 14px between items. No dividers, no boxes. Used for note details and the wine's 시음 노트. A bar chart (the wine's 구조) is one item whose text is the bars.
+- **Short facts** (`.wine-facts`): label and value on one line, label `--fs-s` gray bold in a 56px column. Only for one-line facts (생산자, 도수 …), never prose.
+- **Bullets** (`.note-list`): one fact per bullet, accent markers.
+- Same idea, same label in both places: 구조 (note text / wine bars) and 음식 (note text / wine `food_pairing`). Use these names; don't say 페어링 in one place and 음식 in another.
+
 ### 와인 안쪽 내용 (펼친 와인)
 
 Every opened wine uses the same order. Skip any part that has no data.
 
 1. Bottle photo (`photo_url`), with pinch zoom.
 2. One-line verdict: the first line of `buy_verdict`, `--fs-m` bold.
-3. Basic facts, always visible: label–value rows (label `--fs-s` gray in a 56px column, value `--fs-m`), no dividers. Order: 생산자 · 지역 · 품종 · 도수 · 용량 · 마신 날 · 구매 (price · place) · 내 별점. 나라 and 빈티지 are left out because the sticky wine row above already shows type · vintage · country. 지역 and 품종 link to their study notes. Short facts only, never prose.
+3. Basic facts, always visible: short-fact rows (see the common format above), no dividers. Order: 생산자 · 지역 · 품종 · 도수 · 용량 · 마신 날 · 구매 (price · place) · 내 별점. 나라 and 빈티지 are left out because the sticky wine row above already shows type · vintage · country. 지역 and 품종 link to their study notes. Short facts only, never prose.
 4. Inner ＋ rows, closed by default, in this order:
    - 내 메모 (`personal_notes`)
-   - 시음 노트: first the 당도 · 산도 · 타닌 · 바디 · 여운 bars, then 향 · 맛 · 여운 · 페어링, each a gray label above its text
+   - 시음 노트: text items in this order: 향 · 맛 · 구조 (the 당도 · 산도 · 타닌 · 바디 · 여운 bars) · 여운 · 음식 (`food_pairing`)
    - 점수: one divider row per score: the source (`--fs-m` bold) on the left and the score (`--fs-m` bold, accent) on the right, then one gray `--fs-s` line "vintage · count · note". No big numbers.
    - 구매 판단 근거: the rest of `buy_verdict` as bullets, then a gray "YYYY.MM.DD 환율 기준" line
    - 조사 메모 (`info_notes`) as bullets
