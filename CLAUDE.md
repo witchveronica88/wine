@@ -148,8 +148,8 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
 - Only one note is open at a time. Opening a note from a wine record switches to its tab, picks its group pill, opens the note and scrolls to it.
 - A collapsed note row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count). Never put the note text in a collapsed row; it shows at the top of the opened row.
 - Opened state: ＋ becomes －, the title color stays the same, only the title row gets `--disclosure-bg` across the full card width, a 3px `--accent` bar runs down the left edge of the opened range, and the title sticks just under the pill row (`--stick`). Tapping a stuck title to fold scrolls back to that title.
-- An opened note shows, in order: the one-line summary, the details in the label-column format (see the common format below), then the wines I've had with this grape or region (only when there are any), newest first. No heading: each row is the date (`--fs-s` gray, 84px column) then the wine name (`--fs-m` regular), and rows are divided by lines that run the full card width. No photo, no vintage, no bold, no arrow. The last row's line is the next note's line, so there is never a double line.
-- Note details live in `data/notes.json` → `details.<kind>.<title>` as `[label, text]` pairs. 품종: 향 · 구조 · 주요 산지 · 음식. 산지: 기후와 땅 · 주요 품종 · 스타일 · 알아두기. 사전: 자세히 · 알아두기. One or two plain sentences each, ending in "~다." When adding a note, add its details too.
+- An opened note shows, in order: the details in the label-column format (see the common format below), starting with the row's `summary` as the first item (label 특징 for 품종 · 산지, 뜻 for 사전), then the wines I've had with this grape or region (only when there are any), newest first. No heading: each row is the date (`--fs-s` gray, 84px column) then the wine name (`--fs-m` regular, `--accent` color so it reads as a link), and rows are divided by lines that run the full card width. No photo, no vintage, no bold, no arrow. The last row's line is the next note's line, so there is never a double line.
+- Note details live in `data/notes.json` → `details.<kind>.<title>` as `[label, text]` pairs. 품종: 향 · 구조 · 산지 · 음식. 산지: 기후와 땅 · 주요 품종 · 스타일 · 알아두기. 사전: 자세히 · 알아두기. One or two plain sentences each, ending in "~다." When adding a note, add its details too.
 
 ### Links from a wine to its notes
 
@@ -161,9 +161,9 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
 
 An opened note and an opened wine use the same pieces, so the same kind of text always looks the same:
 
-- **One-line summary** at the top: `--fs-m` regular weight, 16px above the next part. Note → `summary`; wine → the owner's rating and `my_comment` (nothing when the owner gave neither). Not bold.
-- **Label column** — one format for every labelled piece, prose or short fact: the label sits in a 64px left column (`--fs-s` gray bold, `word-break: keep-all` so "주요 산지" breaks only at the space if ever), the content on the right in `--fs-m` regular, first lines on the same baseline, 16px between items, no dividers, no boxes.
-  - Text items (`textItemsHTML`, `.text-items`): note details and the wine's 시음 노트.
+- **One-line summary** at the top of an opened wine: the owner's rating and `my_comment` (nothing when the owner gave neither), `--fs-m` regular, 16px above the next part. A note has no separate summary line: its `summary` is the first label-column item (특징 / 뜻).
+- **Label column** — one format for every labelled piece, prose or short fact: the label sits in a 64px left column (`--fs-s` gray bold, `word-break: keep-all` so a two-word label like "기후와 땅" breaks only at the space if ever), the content on the right in `--fs-m` regular, first lines on the same baseline, 16px between items, no dividers, no boxes.
+  - Text items (`textItemsHTML`, `.text-items`): note summary + details and the wine's 시음 노트.
   - Short facts (`.wine-facts`): the wine's basic facts (생산자, 도수 …), 6px apart.
 - Anything inside an item stays in the right column in regular weight. The wine's 구조 item holds thin bars (6px) with gray `--fs-s` regular names (당도 · 산도 · 타닌 · 바디 · 여운) and gray numbers, so they never look like item labels.
 - **Bullets** (`.note-list`): one fact per bullet, accent markers.

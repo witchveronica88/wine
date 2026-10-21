@@ -1065,9 +1065,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 전체 보기에서 묶음이 바뀌는 곳의 회색 이름표 */
 .note-group-label { padding: 12px var(--card-pad) 4px; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
 .note-item + .note-group-label { border-top: 1px solid var(--border); }
-.note-lead + .note-linked-wines { margin-top: 16px; }
-/* 펼친 항목 맨 위 한 줄 요약: 노트 · 와인 모두 보통 굵기 (굵은 글씨는 항목 이름에만 쓴다. .wine-verdict와 같은 서식) */
-.note-lead { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); }
 .note-linked-wines { margin: 0; }
 .note-pages > .pinch-image:first-child { margin-top: 16px; }
 .pinch-image.is-pending { display: none; }
@@ -1280,7 +1277,6 @@ main.is-searching { --stick: 0px; }
 .text-items .taste-bar-row > span,
 .text-items .taste-bar-row > b { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 400; }
 .text-items .taste-track { height: 6px; border-radius: 3px; }
-.note-lead + .text-items { margin-top: 16px; }
 .text-items + .note-linked-wines { margin-top: 20px; }
 .note-group-label:first-child { padding-top: 14px; }
 
@@ -1326,7 +1322,7 @@ main.is-searching { --stick: 0px; }
 }
 .drunk-row:active { background: var(--disclosure-bg); }
 .drunk-date { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-m); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.drunk-name { font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 400; overflow-wrap: anywhere; }
+.drunk-name { color: var(--accent); font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 400; overflow-wrap: anywhere; }
 
     </style>
   </head>
@@ -2050,10 +2046,10 @@ function noteItemHTML(note) {
     + "</button>";
   if (isOpen) {
     html += '<div class="note-content' + (linked.length > 0 ? " has-list" : "") + '" id="note-pages-' + note.id + '">';
-    html += '<p class="note-lead">' + esc(note.summary) + "</p>";
-    if (note.details.length > 0) {
-      html += textItemsHTML(note.details.map(function (d) { return [d[0], esc(d[1])]; }));
-    }
+    /* 한 줄 설명도 왼쪽 이름 칸 목록의 첫 항목으로 넣는다 (사전은 "뜻", 품종 · 산지는 "특징") */
+    const items = (note.summary ? [[note.kind === "basics" ? "뜻" : "특징", esc(note.summary)]] : [])
+      .concat(note.details.map(function (d) { return [d[0], esc(d[1])]; }));
+    if (items.length > 0) html += textItemsHTML(items);
     html += '<div class="note-pages">';
     note.pages.filter(Boolean).forEach(function (pageUrl, index) {
       const alt = (note.title + " 설명 " + (note.pages.length > 1 ? (index + 1) + "쪽" : "")).trim();
