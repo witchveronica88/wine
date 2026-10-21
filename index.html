@@ -771,7 +771,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   max-width: 560px;
   min-height: calc(env(safe-area-inset-bottom) + 66px);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
   padding: 7px 12px calc(env(safe-area-inset-bottom) + 7px);
   transform: translateX(-50%);
   border-top: 1px solid var(--border);
@@ -1018,6 +1019,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   cursor: pointer;
 }
 .notes-kinds button.active { border-color: var(--accent-soft); background: var(--accent-soft); color: var(--accent); }
+.notes-kinds button b { margin-left: 6px; color: var(--dim); font-weight: 650; }
+.notes-kinds button.active b { color: var(--accent); }
 .fold-card {
   overflow: clip;
   border: 1px solid var(--border);
@@ -1049,13 +1052,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .fold-row-copy small { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); overflow-wrap: anywhere; }
 .fold-sign { flex: 0 0 auto; display: grid; place-items: center; width: 24px; height: 24px; color: var(--dim); }
 .fold-sign svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.note-group + .note-group { border-top: 1px solid var(--border); }
-.note-group { scroll-margin-top: var(--stick); }
-/* 첫 단계(묶음 줄, 묶음 없는 탭의 노트 줄): 카드 폭 전체 배경 + 펼친 범위 왼쪽 끝 컬러바 */
-.note-group.open,
-.note-item:not(.is-nested).open { box-shadow: inset 3px 0 0 var(--accent); }
-.note-group.open > .fold-row,
-.note-item:not(.is-nested).open > .fold-row {
+/* 펼친 노트 줄: 카드 폭 전체 배경 + 펼친 범위 왼쪽 끝 컬러바 */
+.note-item.open { box-shadow: inset 3px 0 0 var(--accent); }
+.note-item.open > .fold-row {
   position: sticky;
   top: var(--stick);
   z-index: 3;
@@ -1063,26 +1062,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   box-shadow: inset 3px 0 0 var(--accent), 0 1px 0 var(--border);
 }
 .note-content { padding: 14px var(--card-pad) var(--card-pad); }
-/* 안쪽 단계(묶음 안의 노트 줄): 제목 줄 배경은 카드 끝까지. 새 막대는 없고, 배경이 덮는 바깥 막대만 같은 자리에 다시 그린다.
-   펼친 내용은 회색 안내선을 두고 들여 써서 한 단계 안쪽인 걸 보인다 */
-.note-group-body { padding: 4px var(--card-pad) 12px; }
-.note-item.is-nested { scroll-margin-top: calc(var(--stick) + 52px); }
-.note-item.is-nested > .fold-row { padding: 12px 0; background: transparent; }
-.note-item.is-nested.open > .fold-row {
-  position: sticky;
-  top: calc(var(--stick) + 52px);
-  z-index: 2;
-  width: calc(100% + 2 * var(--card-pad));
-  margin: 0 calc(-1 * var(--card-pad));
-  padding: 12px var(--card-pad);
-  background: var(--disclosure-bg);
-  box-shadow: inset 3px 0 0 var(--accent), 0 1px 0 var(--border);
-}
-.note-item.is-nested > .note-content { margin: 4px 0 8px; padding: 8px 0 8px 14px; border-left: 2px solid var(--border); }
+/* 전체 보기에서 묶음이 바뀌는 곳의 회색 이름표 */
+.note-group-label { padding: 12px var(--card-pad) 4px; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
+.note-item + .note-group-label { border-top: 1px solid var(--border); }
 .note-lead + .note-linked-wines { margin-top: 16px; }
 .note-lead { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); }
 .note-linked-wines { margin: 0; }
-.note-pages:not(:empty) { margin-top: 16px; }
+.note-pages > .pinch-image:first-child { margin-top: 16px; }
+.pinch-image.is-pending { display: none; }
 .note-linked-wines h3 { margin: 0 0 4px; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
 .note-linked-wines > p { margin: 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
 .note-linked-wine-list > button {
@@ -1320,6 +1307,8 @@ const ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12
 const ICON_ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>';
 const ICON_PLUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>';
 const ICON_SEARCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="M16 16l4 4" /></svg>';
+const ICON_GRAPE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.6" cy="9" r="2.4" /><circle cx="12" cy="9" r="2.4" /><circle cx="16.4" cy="9" r="2.4" /><circle cx="9.8" cy="13.4" r="2.4" /><circle cx="14.2" cy="13.4" r="2.4" /><circle cx="12" cy="17.8" r="2.4" /><path d="M12 6.6V3.5M12 4.5c1.4-1.2 3-1.5 4.6-1" /></svg>';
+const ICON_PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" /><circle cx="12" cy="10" r="2.3" /></svg>';
 const ICON_BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16ZM20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z" /></svg>';
 const ICON_MINUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>';
 const ICON_CHEVRON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>';
@@ -1333,13 +1322,20 @@ let varietyNotes = [];
 let regionNotes = [];
 let basicNotes = [];
 let allWineNotes = [];
-/* 와인 노트 탭: 품종은 레드 · 화이트로, 산지는 나라별로 나눈다 */
-/* 와인 노트: 탭(품종 · 산지 · 기초 개념) → 묶음(레드 · 화이트 / 나라) → 노트 */
+/* 노트는 하단 탭(품종 · 산지 · 사전) → 위쪽 알약(묶음) → 노트 줄 */
 const noteTabs = [
-  { key: "varieties", label: "품종", intro: "레드 · 화이트로 나눈 품종과 내가 마셔 본 와인", unit: "종" },
-  { key: "regions", label: "산지", intro: "나라별로 나눈 산지와 내가 마셔 본 와인", unit: "곳" },
-  { key: "basics", label: "기초 개념", intro: "와인을 이해하고 표현하는 기초 개념", unit: "개" }
+  { key: "varieties", label: "품종", title: "품종 노트", all: "모든 품종", intro: "품종 설명과 내가 마셔 본 와인", unit: "종", search: "품종 이름 검색" },
+  { key: "regions", label: "산지", title: "산지 노트", all: "모든 산지", intro: "산지 설명과 내가 마셔 본 와인", unit: "곳", search: "산지 이름 검색" },
+  { key: "basics", label: "사전", title: "와인 사전", all: "모든 개념", intro: "와인을 이해하고 표현하는 기초 개념", unit: "개", search: "개념 검색" }
 ];
+/* 사전 노트 순서(01–50) → 묶음 */
+function basicGroup(number) {
+  if (number <= 10) return "종류";
+  if (number <= 20) return "맛과 향";
+  if (number <= 27) return "대표 품종";
+  if (number <= 38) return "마시기";
+  return "용어";
+}
 const whiteVarieties = ["샤르도네", "소비뇽 블랑", "리슬링", "슈냉 블랑", "세미용", "비오니에", "게뷔르츠트라미너", "피노 그리", "알바리뇨", "그뤼너 벨트리너", "가르가네가", "모스카토", "팔로미노"];
 /* 산지 노트 번호(p-NN) → 나라 */
 function regionCountry(pageNumber) {
@@ -1365,7 +1361,8 @@ function buildNotes(src) {
   varietyNotes.forEach(function (note) { note.group = whiteVarieties.indexOf(note.title) === -1 ? "레드 품종" : "화이트 품종"; });
   regionNotes.forEach(function (note) { note.group = regionCountry(Number(note.id.split("-")[1])) || "기타"; });
   noteCollections = { varieties: varietyNotes, regions: regionNotes, basics: basicNotes };
-  noteGroups = { varieties: groupNotes(varietyNotes), regions: groupNotes(regionNotes), basics: [] };
+  basicNotes.forEach(function (note) { note.group = basicGroup(Number(note.subtitle)); });
+  noteGroups = { varieties: groupNotes(varietyNotes), regions: groupNotes(regionNotes), basics: groupNotes(basicNotes) };
 }
 function groupNotes(notes) {
   const groups = [];
@@ -1525,7 +1522,8 @@ function loadData() {
 
 /* ================= app state ================= */
 let view = "collection"; /* collection | detail | form */
-let activeTab = "records"; /* records | notes */
+let activeTab = "records"; /* records | varieties | regions | basics */
+const tabScroll = {};
 let selectedId = null; /* the wine being edited / deleted (same as wineOpenId while one is open) */
 let wineOpenId = null;
 let wineOpenSection = null;
@@ -1538,15 +1536,10 @@ let detailScroll = 1;
 let pendingScroll = 1;
 let detailConfirmDelete = false;
 let noteTarget = null;
-const NOTES_KIND_KEY = "wine-notes-kind";
-let notesKind = (function () {
-  try { const saved = localStorage.getItem(NOTES_KIND_KEY); if (noteTabs.some(function (tab) { return tab.key === saved; })) return saved; } catch (e) {}
-  return noteTabs[0].key;
-})();
-function rememberNotesKind() { try { localStorage.setItem(NOTES_KIND_KEY, notesKind); } catch (e) {} }
+let notesKind = "varieties"; /* the note tab on screen, kept in step with activeTab */
+let notesGroupBy = { varieties: "all", regions: "all", basics: "all" };
 let notesQuery = "";
 let notesOpenId = null;
-let notesOpenGroup = null;
 let form = null;
 let formPhoto = null; /* null = unchanged; {photo_url, photo_thumbnail_url} = new photo; "removed" */
 let formError = "";
@@ -1562,8 +1555,14 @@ function localDateString() {
 }
 
 /* ================= pinch zoom image ================= */
+/* 노트 쪽 이미지는 실제로 불러온 뒤에만 보인다. 없는 파일이면 테두리 상자가 잠깐 보였다 사라지지 않게 */
+const loadedImages = new Set();
+const missingImages = new Set();
 function pinchZoomHTML(previewSrc, highResSrc, alt, fit) {
-  return '<div class="pinch-image pinch-image--' + (fit || "page") + '" data-preview="' + esc(previewSrc) + '" data-highres="' + esc(highResSrc || previewSrc) + '">'
+  fit = fit || "page";
+  if (fit === "page" && missingImages.has(previewSrc)) return "";
+  const pending = fit === "page" && !loadedImages.has(previewSrc);
+  return '<div class="pinch-image pinch-image--' + fit + (pending ? " is-pending" : "") + '" data-preview="' + esc(previewSrc) + '" data-highres="' + esc(highResSrc || previewSrc) + '">'
     + '<div class="pinch-image-frame"><img src="' + esc(previewSrc) + '" loading="lazy" decoding="async" draggable="false" alt="' + esc(alt) + '" /></div>'
     + '<span class="pinch-image-hint" hidden></span>'
     + "</div>";
@@ -1576,6 +1575,13 @@ function setupPinchZoom(root) {
     /* 없는 이미지는 안내 문구 없이 통째로 뺀다 */
     root.remove();
   });
+  if (root.classList.contains("is-pending")) {
+    const src = root.getAttribute("data-preview");
+    const probe = new Image();
+    probe.onload = function () { loadedImages.add(src); root.classList.remove("is-pending"); };
+    probe.onerror = function () { missingImages.add(src); root.remove(); };
+    probe.src = src;
+  }
   let statusEl = root.querySelector(".pinch-image-hint");
   let statusMode = "hint";
   const previewSrc = root.getAttribute("data-preview");
@@ -1810,16 +1816,21 @@ function collectionHTML() {
 }
 
 function bottomNavHTML() {
-  return '<nav class="bottom-nav" aria-label="주요 메뉴">'
-    + '<button data-action="tab" data-tab="records" class="' + (activeTab === "records" ? "active" : "") + '"' + (activeTab === "records" ? ' aria-current="page"' : "") + ">" + ICON_GLASS + "<span>와인 기록</span></button>"
-    + '<button data-action="tab" data-tab="notes" class="' + (activeTab === "notes" ? "active" : "") + '"' + (activeTab === "notes" ? ' aria-current="page"' : "") + ">" + ICON_BOOK + "<span>와인 노트</span></button>"
-    + "</nav>";
+  let html = '<nav class="bottom-nav" aria-label="주요 메뉴">';
+  [["records", "기록", ICON_GLASS], ["varieties", "품종", ICON_GRAPE], ["regions", "산지", ICON_PIN], ["basics", "사전", ICON_BOOK]].forEach(function (tab) {
+    const on = activeTab === tab[0];
+    html += '<button data-action="tab" data-tab="' + tab[0] + '" class="' + (on ? "active" : "") + '"' + (on ? ' aria-current="page"' : "") + ">" + tab[2] + "<span>" + tab[1] + "</span></button>";
+  });
+  return html + "</nav>";
 }
 
 /* ================= notes view ================= */
+/* 고른 탭 안에서, 고른 알약 묶음과 검색어로 거른 노트. 묶음 순서대로 모은다 */
 function visibleNotes() {
   const needle = normalizeText(notesQuery);
-  const source = notesQuery.trim() ? allWineNotes : noteCollections[notesKind];
+  const group = notesGroupBy[notesKind];
+  let source = [];
+  (noteGroups[notesKind] || []).forEach(function (g) { if (group === "all" || g.key === group) source = source.concat(g.notes); });
   if (!needle) return source;
   return source.filter(function (note) {
     return normalizeText([note.title, note.subtitle || "", note.summary].concat(note.aliases || []).join(" ")).includes(needle);
@@ -1832,10 +1843,12 @@ function linkedWinesFor(note) {
   });
 }
 function notesKindsHTML() {
+  const current = notesGroupBy[notesKind];
   let html = "";
-  noteTabs.forEach(function (tab) {
-    const active = !notesQuery.trim() && notesKind === tab.key;
-    html += '<button role="tab" data-action="note-kind" data-kind="' + tab.key + '" aria-selected="' + active + '" class="' + (active ? "active" : "") + '">' + esc(tab.label) + "</button>";
+  [{ key: "all", label: "전체", notes: noteCollections[notesKind] }].concat(noteGroups[notesKind] || []).forEach(function (group) {
+    const active = current === group.key;
+    html += '<button type="button" data-action="note-group" data-group="' + esc(group.key) + '" aria-pressed="' + active + '" class="' + (active ? "active" : "") + '">'
+      + "<span>" + esc(group.label) + "</span><b>" + group.notes.length + "</b></button>";
   });
   return html;
 }
@@ -1849,13 +1862,14 @@ function refreshNotesResults() {
   initPinchZooms(results);
 }
 function notesHTML() {
+  const tab = currentNoteTab();
   let html = '<main class="notes-page page-wrap with-bottom-nav">';
-  html += '<header class="brand-row"><h1>와인 노트</h1></header>';
+  html += '<header class="brand-row"><h1>' + esc(tab.title) + "</h1></header>";
   html += '<div class="search-box notes-search">' + ICON_SEARCH
-    + '<input id="notes-search" type="search" enterkeyhint="search" autocomplete="off" value="' + esc(notesQuery) + '" aria-label="와인 노트 검색" placeholder="품종, 산지, 개념 검색" />'
+    + '<input id="notes-search" type="search" enterkeyhint="search" autocomplete="off" value="' + esc(notesQuery) + '" aria-label="' + esc(tab.title) + ' 검색" placeholder="' + esc(tab.search) + '" />'
     + '<button id="notes-search-clear" data-action="clear-notes-search" aria-label="와인 노트 검색어 지우기"' + (notesQuery ? "" : " hidden") + ">" + ICON_CLOSE + "</button>"
     + "</div>";
-  html += '<div class="notes-kinds" id="notes-kinds" role="tablist" aria-label="와인 노트 분류">' + notesKindsHTML() + "</div>";
+  html += '<div class="notes-kinds" id="notes-kinds" role="group" aria-label="' + esc(tab.label) + ' 묶음">' + notesKindsHTML() + "</div>";
   html += '<section class="notes-results" id="notes-results">' + notesResultsHTML() + "</section></main>";
   html += bottomNavHTML();
   return html;
@@ -1864,25 +1878,23 @@ function notesHTML() {
 function keepNoteRowInView(item) {
   if (!item) return;
   const tabs = document.getElementById("notes-kinds");
-  let stick = tabs ? tabs.getBoundingClientRect().bottom : 0;
-  const group = item.classList.contains("is-nested") ? item.closest(".note-group") : null;
-  if (group) stick += group.querySelector(".fold-row").offsetHeight;
+  const stick = tabs ? tabs.getBoundingClientRect().bottom : 0;
   const top = item.getBoundingClientRect().top;
   if (top < stick) window.scrollTo(0, window.scrollY + top - stick);
 }
 function currentNoteTab() {
   return noteTabs.find(function (tab) { return tab.key === notesKind; }) || noteTabs[0];
 }
-function noteRowSummary(note, linkedCount, showGroup) {
+function noteRowSummary(note, linkedCount) {
   if (note.kind === "basics") return "";
-  return [showGroup && note.kind === "regions" ? note.group : "", note.subtitle || "", linkedCount ? "기록 " + linkedCount + "병" : ""].filter(Boolean).join(" · ");
+  return [note.subtitle || "", linkedCount ? "기록 " + linkedCount + "병" : ""].filter(Boolean).join(" · ");
 }
-/* 노트 한 줄. nested면 묶음 안쪽 줄(안쪽 폭 배경, 컬러바 없음, 펼친 내용은 들여 쓴다) */
-function noteItemHTML(note, nested) {
+/* 노트 한 줄 */
+function noteItemHTML(note) {
   const isOpen = notesOpenId === note.id;
   const linked = linkedWinesFor(note);
-  const summary = noteRowSummary(note, linked.length, !nested);
-  let html = '<article class="note-item' + (nested ? " is-nested" : "") + (isOpen ? " open" : "") + '" id="note-' + note.id + '">'
+  const summary = noteRowSummary(note, linked.length);
+  let html = '<article class="note-item' + (isOpen ? " open" : "") + '" id="note-' + note.id + '">'
     + '<button class="fold-row" data-action="toggle-note" data-id="' + note.id + '" aria-expanded="' + isOpen + '" aria-controls="note-pages-' + note.id + '">'
     + '<span class="fold-row-copy"><strong>' + esc(note.title) + "</strong>"
     + (summary ? "<small>" + esc(summary) + "</small>" : "")
@@ -1921,32 +1933,22 @@ function noteItemHTML(note, nested) {
 }
 function notesResultsHTML() {
   const list = visibleNotes();
-  const searching = Boolean(notesQuery.trim());
   const tab = currentNoteTab();
+  const group = notesGroupBy[notesKind];
+  const query = notesQuery.trim();
   let html = '<div class="fold-card notes-card">'
-    + '<header class="fold-head"><div class="fold-title"><h2>'
-    + (searching ? "‘" + esc(notesQuery.trim()) + "’ 검색 결과" : esc(tab.label))
-    + '</h2><span class="count-badge" aria-live="polite">' + list.length + (searching ? "개" : tab.unit) + "</span></div>"
-    + "<p>" + (searching ? "품종 · 산지 · 기초 개념에서 찾은 노트" : esc(tab.intro)) + "</p></header>";
-  const groups = searching ? [] : noteGroups[notesKind] || [];
+    + '<header class="fold-head"><div class="fold-title"><h2>' + esc(group === "all" ? tab.all : group) + "</h2>"
+    + '<span class="count-badge" aria-live="polite">' + list.length + tab.unit + "</span></div>"
+    + "<p>" + (query ? "‘" + esc(query) + "’ 검색 결과" : esc(tab.intro)) + "</p></header>";
   if (list.length === 0) {
-    html += '<div class="no-results"><p>일치하는 노트가 없습니다.</p><button class="text-button" data-action="clear-notes-search">검색어 지우기</button></div>';
-  } else if (groups.length === 0) {
-    list.forEach(function (note) { html += noteItemHTML(note, false); });
+    html += '<div class="no-results"><p>일치하는 노트가 없습니다.</p><button class="text-button" data-action="reset-note-filters">전체 보기</button></div>';
   } else {
-    groups.forEach(function (group) {
-      const isOpen = notesOpenGroup === group.key;
-      const groupId = "note-group-" + groups.indexOf(group);
-      html += '<section class="note-group' + (isOpen ? " open" : "") + '" id="' + groupId + '">'
-        + '<button class="fold-row" data-action="toggle-note-group" data-group="' + esc(group.key) + '" data-target="' + groupId + '" aria-expanded="' + isOpen + '">'
-        + '<span class="fold-row-copy"><strong>' + esc(group.label) + "</strong><small>" + group.notes.length + tab.unit + "</small></span>"
-        + '<span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span></button>";
-      if (isOpen) {
-        html += '<div class="note-group-body">';
-        group.notes.forEach(function (note) { html += noteItemHTML(note, true); });
-        html += "</div>";
+    /* 전체를 볼 때는 묶음이 바뀌는 곳마다 회색 이름표를 둔다 */
+    list.forEach(function (note, index) {
+      if (group === "all" && (index === 0 || list[index - 1].group !== note.group)) {
+        html += '<div class="note-group-label">' + esc(note.group) + "</div>";
       }
-      html += "</section>";
+      html += noteItemHTML(note);
     });
   }
   return html + "</div>";
@@ -2429,11 +2431,11 @@ function openWineNote(noteId) {
   pendingScroll = 1;
   formMode = null;
   view = "collection";
-  activeTab = "notes";
-  notesQuery = "";
+  tabScroll[activeTab] = window.scrollY;
+  activeTab = note.kind;
   notesKind = note.kind;
-  rememberNotesKind();
-  notesOpenGroup = note.group || null;
+  notesQuery = "";
+  notesGroupBy[note.kind] = note.group || "all";
   notesOpenId = note.id;
   render({ restoreScroll: true });
   window.setTimeout(function () {
@@ -2579,34 +2581,33 @@ appEl.addEventListener("click", function (event) {
   else if (action === "revert-wine") revertSelected();
   else if (action === "tab") {
     const tab = target.getAttribute("data-tab");
-    if (tab !== activeTab) { activeTab = tab; render({ keepScroll: true }); }
+    if (tab !== activeTab) {
+      tabScroll[activeTab] = window.scrollY;
+      activeTab = tab;
+      if (tab !== "records") { notesKind = tab; notesQuery = ""; notesOpenId = null; }
+      pendingScroll = tabScroll[tab] || 1;
+      render({ restoreScroll: true });
+    }
   }
   else if (action === "type-filter") { typeFilter = target.getAttribute("data-type"); render({ keepScroll: true }); }
   else if (action === "clear-search") { searchText = ""; render({ keepScroll: true }); }
   else if (action === "reset-filters") { searchText = ""; typeFilter = "all"; render({ keepScroll: true }); }
   else if (action === "clear-notes-search") { notesQuery = ""; render({ keepScroll: true }); }
-  else if (action === "note-kind") {
-    notesKind = target.getAttribute("data-kind");
-    rememberNotesKind();
-    notesQuery = "";
+  else if (action === "note-group") {
+    notesGroupBy[notesKind] = target.getAttribute("data-group");
     notesOpenId = null;
-    notesOpenGroup = null;
-    render();
-    window.scrollTo({ top: 1, behavior: "smooth" });
+    render({ keepScroll: true });
+  }
+  else if (action === "reset-note-filters") {
+    notesGroupBy[notesKind] = "all";
+    notesQuery = "";
+    render({ keepScroll: true });
   }
   else if (action === "toggle-note") {
     const id = target.getAttribute("data-id");
     notesOpenId = notesOpenId === id ? null : id;
     render({ keepScroll: true });
     keepNoteRowInView(document.getElementById("note-" + id));
-  }
-  else if (action === "toggle-note-group") {
-    const key = target.getAttribute("data-group");
-    const groupId = target.getAttribute("data-target");
-    notesOpenGroup = notesOpenGroup === key ? null : key;
-    notesOpenId = null;
-    render({ keepScroll: true });
-    keepNoteRowInView(document.getElementById(groupId));
   }
   else if (action === "open-note") openWineNote(target.getAttribute("data-note-id"));
   else if (action === "open-linked-wine") openWineInRecords(target.getAttribute("data-id"));

@@ -13,7 +13,7 @@ The owner wants every change live right away: commit and push straight to `main`
 - `data/wines.json`: every wine record, shared across devices. This is the source of truth.
 - `data/notes.json`: the study-note index (varieties, regions, basics).
 - `photos/NNN.webp` and `photos/NNN-thumb.webp`: the bottle photo for wine id NNN, zero-padded to 3 digits.
-- `assets/notes/<kind>/p-NN.webp`: study-note page images. **Not in the repo yet**. An image that fails to load is removed with no message, so nothing shows until they are added.
+- `assets/notes/<kind>/p-NN.webp`: study-note page images. **Not in the repo yet.** The app keeps each page image hidden until it has actually loaded, so nothing shows (no empty box, no flash) while the files are missing.
 - `tools/add_photo.py`: converts a photo into the two webp files.
 - `tools/check.py`: validates `data/wines.json`. Run it before every commit.
 
@@ -82,7 +82,7 @@ Pages must not scroll sideways at a 360px phone width.
 
 ### Screen title (화면 맨 위 제목)
 
-- Each main screen starts with a small centered title in `.brand-row`: "와인 기록" / "와인 노트", `--fs-l` bold, with a thin double-line decoration on both sides. About 12px above and below.
+- Each main screen starts with a small centered title in `.brand-row`: "와인 기록" / "품종 노트" / "산지 노트" / "와인 사전", `--fs-l` bold, with a thin double-line decoration on both sides. About 12px above and below.
 - The title is not sticky. It scrolls away and only the tab row stays at the top.
 - There is no in-app add, edit or delete. The owner asks Claude, and Claude changes `data/wines.json` (and `photos/`) in the repo. An opened wine only shows "원래 기록으로 되돌리기" / "이 기기에서 지우기" for leftover device-only changes from before.
 
@@ -102,15 +102,16 @@ Common:
 - Sorted by date, a gray year label ("2026년") starts each year and the row date is month.day. Other sorts show a short year (26.10.5).
 - Tapping a row opens it in place (first level: full-width title background + accent bar, sticky under the tab row). There is no separate detail page. Only one wine and one inner section are open at a time. A link from a study note switches to 와인 기록, clears the filters and search, opens that wine and scrolls to it.
 
-와인 노트:
-- Three tabs: 품종 · 산지 · 기초 개념 (`noteTabs` in `index.html`). The last tab picked is remembered in localStorage `wine-notes-kind` (falls back to 품종).
-- 품종 and 산지 have two levels: group ＋ rows, then note ＋ rows inside. 품종 groups are 레드 품종 / 화이트 품종 (split by the `whiteVarieties` list). 산지 groups are countries in note order (`regionCountry`, from the note page number). When a variety or region note is added to `data/notes.json`, update those too. 기초 개념 and search results are one level of note rows.
-- Group rows show the name and a gray count ("13곳", "18종"). Only one group and one note are open at a time. Opening a note from a wine record switches to its tab, opens its group and the note, and scrolls to it.
-- A collapsed note row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count; country too in search results). Never put the note text in a collapsed row; it shows at the top of the opened row.
-- Opened state, same everywhere: ＋ becomes －, and the title color stays the same.
-  - First level (group rows, or note rows in 기초 개념 and search): only the title row gets `--disclosure-bg`, full card width, and a 3px `--accent` bar runs down the left edge of the whole opened range. The title sticks just under the tab row (`--stick`).
-  - Inner level (note rows inside a group): the title row's `--disclosure-bg` also runs the full card width, with square corners. No new bar for this level; the outer 3px accent bar is redrawn at the same spot so it doesn't break where the background covers it. It sticks under the group row (`--stick` + 52px). The opened content is indented 14px with a 2px `--border` guide line on its left, which is what marks it as one level in.
-  - Tapping a stuck title to fold scrolls back to that title.
+Bottom tabs: 기록 · 품종 · 산지 · 사전 (4 tabs). The app always opens on 기록. Each tab keeps its own scroll position while the app is open.
+
+품종 · 산지 · 사전 (note tabs, `noteTabs` in `index.html`):
+- The pill row holds the groups of that tab with counts: 품종 = 전체 · 레드 품종 · 화이트 품종 (split by the `whiteVarieties` list); 산지 = 전체 · countries in note order (`regionCountry`, from the note page number); 사전 = 전체 · 종류 · 맛과 향 · 대표 품종 · 마시기 · 용어 (`basicGroup`, from the note number 01–50). When a note is added to `data/notes.json`, update those too.
+- The card title is "모든 품종" / "모든 산지" / "모든 개념" or the picked group, the badge is the count, and the description line is the tab intro (or "‘…’ 검색 결과" while searching).
+- One level of note ＋ rows. Under 전체, a gray group label (like the year label in 와인 기록) starts each group.
+- Search looks only inside the current tab and the picked group. Switching bottom tabs clears the search and closes the open note.
+- Only one note is open at a time. Opening a note from a wine record switches to its tab, picks its group pill, opens the note and scrolls to it.
+- A collapsed note row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count). Never put the note text in a collapsed row; it shows at the top of the opened row.
+- Opened state: ＋ becomes －, the title color stays the same, only the title row gets `--disclosure-bg` across the full card width, a 3px `--accent` bar runs down the left edge of the opened range, and the title sticks just under the pill row (`--stick`). Tapping a stuck title to fold scrolls back to that title.
 - Items inside an opened note (linked wine records) are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
 
 ### 와인 안쪽 내용 (펼친 와인)
@@ -128,7 +129,7 @@ Every opened wine uses the same order. Skip any part that has no data.
    - 구매 판단 근거: the rest of `buy_verdict` as bullets; the summary shows the count and the exchange-rate date
    - 조사 메모 (`info_notes`) as bullets
    A collapsed inner row shows only a count or the item names ("3개", "향 · 맛 · 여운 · 페어링"), never the text. Inner rows follow the inner-level opened style: full-width background with the outer bar redrawn, sticky under the wine row, content indented 14px behind a 2px gray guide line.
-5. 수정 · 삭제 as small text buttons at the bottom right. 삭제 asks for confirmation inline.
+5. No 수정 · 삭제 buttons. Only a leftover device-only change shows a small "원래 기록으로 되돌리기" or "이 기기에서 지우기" at the bottom.
 
 When writing a record, fill the fields so they land in the right place:
 - `buy_verdict`: the first line is the verdict in one sentence, ending in "~다". Each following line is one piece of evidence (one price source with its KRW conversion, or one reason).
