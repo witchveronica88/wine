@@ -9,6 +9,7 @@ The owner wants every change live right away: commit and push straight to `main`
 
 Browsers may keep the previous `index.html` for up to 10 minutes after a deploy (GitHub Pages sends `max-age=600`), while `data/*.json` is always fetched fresh. So:
 - When the shape of a data file changes, the new `index.html` must still read the old shape, and the old shape should keep working for a while (prefer adding fields over renaming or removing them).
+- Refreshing: browser pull-to-refresh is blocked (`overscroll-behavior: none`) and the home-screen app has no reload button, so the app has its own pull-to-refresh: pulling down at the top and releasing past 72px reloads a fresh page (same `?r=…` URL as below) and keeps the current bottom tab. Coming back to the app after more than a minute re-fetches `wines.json` and `notes.json` quietly and redraws in place when something changed.
 - If loading fails, the app reloads itself once at a fresh URL (`?r=…`, guarded by sessionStorage `wine-fresh-reload`), then shows the error screen. 기록 never waits on `notes.json`: if only the notes fail, records still show and the note tabs say so.
 
 ## Layout
@@ -106,7 +107,7 @@ Common:
 - Sorted by date, a gray year label ("2026년") starts each year and the row date is month.day. Other sorts show a short year (26.10.5).
 - Tapping a row opens it in place (first level: full-width title background + accent bar, sticky under the tab row). There is no separate detail page. Only one wine and one inner section are open at a time. A link from a study note switches to 와인 기록, clears the filters and search, opens that wine and scrolls to it.
 
-Bottom tabs: 기록 · 품종 · 산지 · 사전 (4 tabs). The app always opens on 기록. Each tab keeps its own scroll position while the app is open.
+Bottom tabs: 기록 · 품종 · 산지 · 사전 (4 tabs). The app opens on 기록 (a pull-to-refresh keeps the current tab). Each tab keeps its own scroll position while the app is open.
 
 Search (통합 검색): every tab has the same search box ("와인, 품종, 산지, 개념 검색"), and it always searches everything at once. While there is a query, the pill row and the tab's card are replaced by "‘…’ 검색 결과" and one card per kind that has hits, in tab order: 와인 기록 (n병), 품종, 산지, 사전. Rows in the results open in place like everywhere else. Clearing the box or switching bottom tabs ends the search.
 

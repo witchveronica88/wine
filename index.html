@@ -1230,6 +1230,41 @@ main.is-searching { --stick: 0px; }
 .search-summary { margin: 0 0 12px; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
 #tab-body > .fold-card + .fold-card { margin-top: 16px; }
 
+/* 당겨서 새로고침 표시: 화면 위에서 당긴 만큼 내려온다 */
+.pull-refresh {
+  position: fixed;
+  z-index: 30;
+  top: env(safe-area-inset-top);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 4px 14px color-mix(in srgb, #000 12%, transparent);
+  color: var(--dim);
+  font-size: var(--fs-s);
+  line-height: var(--lh-s);
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(var(--pull, 0px) - 100%));
+  transition: transform .2s ease, opacity .2s ease;
+}
+.pull-refresh[data-state="pull"],
+.pull-refresh[data-state="ready"] { opacity: 1; transition: none; }
+.pull-refresh[data-state="ready"],
+.pull-refresh[data-state="loading"] { opacity: 1; color: var(--accent); }
+.pull-refresh-icon { display: grid; place-items: center; }
+.pull-refresh svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pull-refresh[data-state="loading"] .pull-refresh-icon { animation: spin .8s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .pull-refresh[data-state="loading"] .pull-refresh-icon { animation: none; }
+}
+
     </style>
   </head>
   <body>
@@ -1315,6 +1350,7 @@ const ICON_SEARCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11"
 const ICON_GRAPE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.6" cy="9" r="2.4" /><circle cx="12" cy="9" r="2.4" /><circle cx="16.4" cy="9" r="2.4" /><circle cx="9.8" cy="13.4" r="2.4" /><circle cx="14.2" cy="13.4" r="2.4" /><circle cx="12" cy="17.8" r="2.4" /><path d="M12 6.6V3.5M12 4.5c1.4-1.2 3-1.5 4.6-1" /></svg>';
 const ICON_PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" /><circle cx="12" cy="10" r="2.3" /></svg>';
 const ICON_BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16ZM20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z" /></svg>';
+const ICON_REFRESH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4" /></svg>';
 const ICON_MINUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>';
 const ICON_CHEVRON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>';
 
@@ -1420,6 +1456,7 @@ const LEGACY_SEED_MAX_ID = 26; /* v1 stored a full copy of wines 1–26 */
 let storageAvailable = true;
 let loadState = "loading"; /* loading | ready | error */
 let notesFailed = false; /* records still show when only the notes file fails */
+let notesSource = ""; /* notes.json as last read, to spot changes */
 let baseWines = [];
 let local = { added: [], edited: {}, deleted: [] };
 let wines = [];
@@ -1503,8 +1540,9 @@ function commitLocal(change) {
 /* 배포 직후에는 브라우저에 남은 예전 index.html(최대 10분)과 새 데이터가 안 맞을 수 있다.
    불러오기에 실패하면 주소를 바꿔 새 페이지로 한 번만 다시 연다 */
 const RELOAD_KEY = "wine-fresh-reload";
+const TAB_KEY = "wine-fresh-tab";
 function reloadFresh() {
-  try { sessionStorage.setItem(RELOAD_KEY, "1"); } catch (e) {}
+  try { sessionStorage.setItem(RELOAD_KEY, "1"); sessionStorage.setItem(TAB_KEY, activeTab); } catch (e) {}
   location.replace(location.pathname + "?r=" + Date.now());
 }
 function alreadyReloaded() {
@@ -1515,7 +1553,7 @@ function loadData() {
   render();
   Promise.all([
     fetchJSON("data/wines.json"),
-    fetchJSON("data/notes.json").then(function (src) { buildNotes(src); return true; }).catch(function () { return false; })
+    fetchJSON("data/notes.json").then(function (src) { buildNotes(src); notesSource = JSON.stringify(src); return true; }).catch(function () { return false; })
   ]).then(function (results) {
     if (!results[1] && !alreadyReloaded()) { reloadFresh(); return; }
     notesFailed = !results[1];
@@ -1532,7 +1570,12 @@ function loadData() {
     }
     wines = mergedWines();
     loadState = "ready";
-    try { sessionStorage.removeItem(RELOAD_KEY); } catch (e) {}
+    try {
+      sessionStorage.removeItem(RELOAD_KEY);
+      const tab = sessionStorage.getItem(TAB_KEY);
+      sessionStorage.removeItem(TAB_KEY);
+      if (tab && tab !== "records" && noteCollections[tab] && !notesFailed) { activeTab = tab; notesKind = tab; }
+    } catch (e) {}
     if (location.search) history.replaceState(history.state, "", location.pathname);
     render({ restoreScroll: true });
   }).catch(function () {
@@ -2689,15 +2732,65 @@ appEl.addEventListener("click", function (event) {
   }
 });
 
-/* pull-to-refresh guard: keep the window off the top boundary */
-window.addEventListener("scroll", function () {
-  if (window.scrollY < 1) window.scrollTo(0, 1);
+/* ================= 새로고침 =================
+   홈 화면 앱에는 새로고침 버튼이 없고, 브라우저의 당겨서 새로고침은 overscroll-behavior로 막혀 있다.
+   그래서 앱이 직접 한다: 맨 위에서 아래로 당겼다 놓으면 최신 페이지와 기록을 새로 받는다 */
+const PULL_TRIGGER = 72;
+const pullEl = document.createElement("div");
+pullEl.className = "pull-refresh";
+pullEl.setAttribute("aria-hidden", "true");
+pullEl.innerHTML = '<span class="pull-refresh-icon">' + ICON_REFRESH + '</span><span class="pull-refresh-text"></span>';
+document.body.appendChild(pullEl);
+let pullStart = null;
+let pullDistance = 0;
+function setPull(distance, state) {
+  pullDistance = distance;
+  pullEl.style.setProperty("--pull", Math.min(distance, PULL_TRIGGER * 1.4) + "px");
+  pullEl.querySelector(".pull-refresh-icon").style.transform = state === "loading" ? "" : "rotate(" + Math.round(distance * 4) + "deg)";
+  pullEl.dataset.state = state;
+  pullEl.querySelector(".pull-refresh-text").textContent = state === "loading" ? "새로 불러오는 중" : state === "ready" ? "놓으면 새로고침" : "당겨서 새로고침";
+}
+function endPull() {
+  if (pullStart === null) return;
+  pullStart = null;
+  if (pullDistance >= PULL_TRIGGER) { setPull(PULL_TRIGGER, "loading"); reloadFresh(); }
+  else setPull(0, "");
+}
+window.addEventListener("touchstart", function (event) {
+  pullStart = event.touches.length === 1 && window.scrollY <= 1 && pullEl.dataset.state !== "loading" ? event.touches[0].clientY : null;
 }, { passive: true });
+window.addEventListener("touchmove", function (event) {
+  if (pullStart === null) return;
+  if (event.touches.length !== 1) { pullStart = null; setPull(0, ""); return; }
+  const distance = (event.touches[0].clientY - pullStart) * 0.5;
+  if (distance <= 0 || window.scrollY > 1) { if (pullDistance) setPull(0, ""); return; }
+  setPull(distance, distance >= PULL_TRIGGER ? "ready" : "pull");
+}, { passive: true });
+window.addEventListener("touchend", endPull, { passive: true });
+window.addEventListener("touchcancel", function () { pullStart = null; setPull(0, ""); }, { passive: true });
+
+/* 1분 넘게 다른 앱에 있다가 돌아오면 기록과 노트를 조용히 다시 받는다.
+   바뀐 게 있으면 지금 화면 그대로 다시 그리고, 새 데이터를 이 페이지가 못 읽으면 새 페이지를 받는다 */
+let hiddenAt = 0;
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden) { hiddenAt = Date.now(); return; }
+  if (loadState !== "ready" || !hiddenAt || Date.now() - hiddenAt < 60000) return;
+  hiddenAt = 0;
+  Promise.all([fetchJSON("data/wines.json"), fetchJSON("data/notes.json")]).then(function (results) {
+    const winesChanged = JSON.stringify(results[0]) !== JSON.stringify(baseWines);
+    const notesText = JSON.stringify(results[1]);
+    const notesChanged = notesText !== notesSource;
+    if (!winesChanged && !notesChanged) return;
+    if (notesChanged) {
+      try { buildNotes(results[1]); notesSource = notesText; notesFailed = false; } catch (e) { reloadFresh(); return; }
+    }
+    baseWines = results[0];
+    wines = mergedWines();
+    if (view === "collection") render({ keepScroll: true });
+  }).catch(function () {});
+});
 
 loadData();
-window.requestAnimationFrame(function () {
-  if (window.scrollY < 1) window.scrollTo(0, 1);
-});
 
     </script>
   </body>
