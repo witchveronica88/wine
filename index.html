@@ -1301,6 +1301,11 @@ main.is-searching { --stick: 0px; }
 /* 지역 · 품종 글 안의 노트 이름: 색만 바꾼다 */
 .fact dd .inline-note-link { display: inline; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: inherit; text-align: inherit; cursor: pointer; }
 
+/* 사진 아래 내 평가: 별점과 한줄평 */
+.wine-mine { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 16px; }
+.wine-mine .rating { margin: 0; color: var(--text); font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
+.wine-mine p { margin: 0; flex: 1 1 200px; font-size: var(--fs-m); line-height: var(--lh-m); }
+.wine-section-body .wine-verdict { margin: 0 0 10px; }
     </style>
   </head>
   <body>
@@ -1333,41 +1338,8 @@ function vintageLabel(value) {
   const m = vintage.match(/^\s*(\d{4})\b/);
   return m ? m[1] : vintage;
 }
-function listGrapeLabel(wine) {
-  if (wine.grapes_label) return wine.grapes_label;
-  const grapes = String(wine.grapes || "").trim();
-  if (!grapes) return "";
-  let label = grapes;
-  const percentageCount = (grapes.match(/\d+(?:[.,]\d+)?\s*%/g) || []).length;
-  const descriptiveLead = grapes.match(/^(?:베이스 와인|대표 품종|주 품종|주요 품종)\s*:\s*([^.;。]+)/);
-  if (descriptiveLead) {
-    label = descriptiveLead[1].trim();
-  } else if (percentageCount <= 1) {
-    const trailing = grapes.match(/^(.+?)\s+100(?:[.,]0+)?\s*%\s*\.?$/);
-    const leading = grapes.match(/^100(?:[.,]0+)?\s*%\s+(.+?)\s*\.?$/);
-    label = (trailing && trailing[1].trim()) || (leading && leading[1].trim()) || grapes;
-  }
-  return label.replace(/\s+100(?:[.,]0+)?\s*%\s*$/, "").trim();
-}
 function textBullets(value) {
   return String(value).split(/\n+/).map(function (line) { return line.replace(/^\s*[-•·]\s*/, "").trim(); }).filter(Boolean);
-}
-const alternateVintagePattern = /\s*(?:위\s*향[·과]\s*맛은\s*)?다른\s*빈티지\s*자료(?:를)?\s*기준(?:으로)?(?:\s*(?:정리했다|한\s*설명이다|이다))?\.?\s*$/;
-const previousVintagePattern = /^\s*이전\s*빈티지\s*자료\s*기준으로\s*/;
-const officialTechnicalPattern = /\s*2023년\s*공식\s*기술자료(?:를)?\s*기준으로\s*정리했다\.?\s*$/;
-function tastingText(value) {
-  let sourceCaveat = "";
-  if (previousVintagePattern.test(value)) sourceCaveat = "(이전 빈티지 자료 기준)";
-  else if (officialTechnicalPattern.test(value)) sourceCaveat = "(2023년 공식 기술자료 기준)";
-  else if (alternateVintagePattern.test(value)) sourceCaveat = "(다른 빈티지 자료 기준)";
-  const text = String(value)
-    .replace(previousVintagePattern, "")
-    .replace(officialTechnicalPattern, "")
-    .replace(alternateVintagePattern, "")
-    .replace(/\s+([.,])/g, "$1")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  return { text: text, sourceCaveat: sourceCaveat };
 }
 function normalizeText(value) {
   return String(value).toLocaleLowerCase("ko-KR").replace(/[\s·.,()\-_/]/g, "");
@@ -1804,7 +1776,7 @@ function initPinchZooms(scope) {
 
 /* ================= collection view ================= */
 function wineMatches(wine, needle) {
-  return [wine.name, wine.producer, wine.vintage, wine.country, wine.region, wine.grapes, wine.personal_notes, wine.info_notes, wine.buy_verdict]
+  return [wine.name, wine.producer, wine.vintage, wine.country, wine.region, wine.grapes, wine.place, wine.my_comment, wine.personal_notes, wine.info_notes, wine.buy_verdict]
     .join(" ").toLocaleLowerCase("ko-KR").includes(needle);
 }
 function noteMatches(note, needle) {
@@ -2126,16 +2098,7 @@ function wineBodyHTML(wine) {
   const verdictBullets = textBullets(wine.buy_verdict || "");
   const verdictJudgment = verdictBullets[0];
   const verdictReasons = verdictBullets.slice(1);
-  const hasUnconfirmed = /마신\s*병\s*미확인/.test(wine.vintage || "");
-  const storedInfo = textBullets(wine.info_notes || "");
-  const infoBullets = hasUnconfirmed
-    ? ["마신 병의 빈티지는 확인되지 않았다."].concat(storedInfo.filter(function (line) { return !/마신\s*병(?:의)?\s*빈티지.*확인되지\s*않/.test(line); }))
-    : storedInfo;
-  const aroma = tastingText(wine.aroma || "");
-  const taste = tastingText(wine.taste || "");
-  const basisCaveat = wine.basis_note ? "(" + wine.basis_note + ")" : "";
-  const aromaCaveat = basisCaveat || aroma.sourceCaveat;
-  const tasteCaveat = basisCaveat || taste.sourceCaveat;
+  const infoBullets = textBullets(wine.info_notes || "");
   const tasteMetrics = [
     { label: "당도", value: wine.sweetness },
     { label: "산도", value: wine.acidity },
@@ -2150,7 +2113,10 @@ function wineBodyHTML(wine) {
   if (wine.photo_url) {
     html += '<div class="wine-photo">' + pinchZoomHTML(wine.photo_thumbnail_url || wine.photo_url, wine.photo_url, wine.name + " 병 사진", "contain") + "</div>";
   }
-  if (verdictJudgment) html += '<p class="wine-verdict">' + esc(verdictJudgment) + "</p>";
+  /* 사진 바로 아래는 내 평가(별점 · 한줄평) 자리. 조사로 쓴 구매 판정은 '구매 판단' 줄 안에 둔다 */
+  if (hasRating || wine.my_comment) {
+    html += '<div class="wine-mine">' + (hasRating ? starsHTML(wine.rating) : "") + (wine.my_comment ? "<p>" + esc(wine.my_comment) + "</p>" : "") + "</div>";
+  }
 
   const facts = [];
   if (wine.producer) facts.push(factHTML("생산자", esc(wine.producer)));
@@ -2159,8 +2125,8 @@ function wineBodyHTML(wine) {
   if (wine.alcohol_percent) facts.push(factHTML("도수", esc(wine.alcohol_percent)));
   if (wine.volume_ml) facts.push(factHTML("용량", esc(wine.volume_ml) + "ml"));
   if (wine.consumed_date) facts.push(factHTML("마신 날", esc(formatDate(wine.consumed_date))));
+  if (wine.place) facts.push(factHTML("마신 곳", esc(wine.place)));
   if (hasPrice || wine.purchase_place) facts.push(factHTML("구매", esc([hasPrice ? formatWon(wine.price_krw) : "", wine.purchase_place || ""].filter(Boolean).join(" · "))));
-  if (hasRating) facts.push(factHTML("내 별점", starsHTML(wine.rating)));
   if (facts.length > 0) html += '<dl class="wine-facts">' + facts.join("") + "</dl>";
 
   let sections = "";
@@ -2168,15 +2134,18 @@ function wineBodyHTML(wine) {
     sections += wineSectionHTML(wine, "mine", "내 메모", "", '<p class="wine-prose">' + esc(wine.personal_notes) + "</p>");
   }
   const tastingRows = [];
-  if (aroma.text) tastingRows.push(["향", "<span>" + esc(aroma.text) + "</span>" + (aromaCaveat ? '<small class="source-caveat">' + esc(aromaCaveat) + "</small>" : "")]);
-  if (taste.text) tastingRows.push(["맛", "<span>" + esc(taste.text) + "</span>" + (tasteCaveat ? '<small class="source-caveat">' + esc(tasteCaveat) + "</small>" : "")]);
+  if (wine.aroma) tastingRows.push(["향", esc(wine.aroma)]);
+  if (wine.taste) tastingRows.push(["맛", esc(wine.taste)]);
   if (wine.finish) tastingRows.push(["여운", esc(wine.finish)]);
   /* 품종 노트와 같은 이름(구조 · 음식)을 쓰고, 맛 막대는 "구조" 항목으로 넣는다 */
   if (tasteMetrics.length > 0) {
     tastingRows.splice(Math.min(2, tastingRows.length), 0, ["구조", '<div class="taste-bars">' + tasteMetrics.map(function (m) { return tasteBarHTML(m.label, m.value); }).join("") + "</div>"]);
   }
   if (wine.food_pairing) tastingRows.push(["음식", esc(wine.food_pairing)]);
-  if (tastingRows.length > 0) sections += wineSectionHTML(wine, "tasting", "시음 노트", "", textItemsHTML(tastingRows));
+  if (tastingRows.length > 0) {
+    sections += wineSectionHTML(wine, "tasting", "시음 노트", "", textItemsHTML(tastingRows)
+      + (wine.basis_note ? '<p class="wine-rate-date">' + esc(wine.basis_note) + "</p>" : ""));
+  }
   if (wine.scores && wine.scores.length > 0) {
     let scoresHTML = '<div class="score-items">';
     wine.scores.forEach(function (score) {
@@ -2190,9 +2159,10 @@ function wineBodyHTML(wine) {
     });
     sections += wineSectionHTML(wine, "scores", "점수", "", scoresHTML + "</div>");
   }
-  if (verdictReasons.length > 0) {
-    sections += wineSectionHTML(wine, "verdict", "구매 판단 근거", "",
-      '<ul class="note-list">' + verdictReasons.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>"
+  if (verdictJudgment) {
+    sections += wineSectionHTML(wine, "verdict", "구매 판단", "",
+      '<p class="wine-verdict">' + esc(verdictJudgment) + "</p>"
+      + (verdictReasons.length > 0 ? '<ul class="note-list">' + verdictReasons.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>" : "")
       + (rateDate ? '<p class="wine-rate-date">' + esc(rateDate) + " 환율 기준</p>" : ""));
   }
   if (infoBullets.length > 0) {
@@ -2200,7 +2170,7 @@ function wineBodyHTML(wine) {
       '<ul class="note-list">' + infoBullets.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("") + "</ul>");
   }
   if (sections) html += '<div class="wine-sections">' + sections + "</div>";
-  if (!verdictJudgment && facts.length === 0 && !sections) html += '<p class="detail-empty">아직 정리된 내용이 없습니다.</p>';
+  if (facts.length === 0 && !sections) html += '<p class="detail-empty">아직 정리된 내용이 없습니다.</p>';
 
   /* records are edited through the repo, so the app only offers a way back
      for leftover device-only changes */
