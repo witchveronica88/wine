@@ -80,16 +80,32 @@ Pair each size with its line-height token (`--lh-xl`, `--lh-l`, `--lh-m`, `--lh-
 
 Pages must not scroll sideways at a 360px phone width.
 
-### Fold cards (카드 규칙, 와인 노트 화면)
+### Screen title (화면 맨 위 제목)
 
-The study-note screen follows the card rules shared with the classic and princess repos (classic is the reference):
+- Each main screen starts with a small centered title in `.brand-row`: "와인 기록" / "와인 노트", `--fs-l` bold, with a thin double-line decoration on both sides. About 12px above and below.
+- The title is not sticky. It scrolls away and only the tab row stays at the top.
+- There is no in-app "add wine" button or form. The owner sends the details and Claude adds the record to `data/wines.json`. Editing and deleting on the detail page still work (local only).
 
-- Kind tabs (품종 · 산지 · 기초 개념) are one row of pill tabs, sticky at the top and scrollable sideways. The last tab picked is remembered in localStorage `wine-notes-kind` (falls back to 품종 if storage fails). Opening a note from a wine record switches to its tab and opens it.
-- The list is one `.fold-card`: a head with the title (`--fs-xl`, bold), a gray pill count badge on the right, a one-line description below, then a thin line. Under it, full-width ＋ rows separated by thin lines, at least 44px tall.
-- A collapsed row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count). Never put the note text in a collapsed row; it shows at the top of the opened row.
-- Opened row: ＋ becomes －, the title color stays the same, only the title row gets `--disclosure-bg`, and a 3px `--accent` bar runs down the left edge of the whole opened range. Content starts 14px below the title row's line. The opened title sticks just under the tab row, and tapping it to fold scrolls back to the title.
-- Items inside an opened row (linked wine records) are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
+### Fold cards (카드 규칙)
+
+Both main screens follow the card rules shared with the classic and princess repos (classic is the reference).
+
+Common:
+- A row of pill tabs under the search box, sticky at the top and scrollable sideways. The selected tab is scrolled into view.
+- Below it, one card (`.fold-card`): a head with the title (`--fs-xl`, bold), a gray pill count badge on the right, a one-line gray description, then a thin line. Under the head, full-width rows separated by thin lines, at least 44px tall.
 - Cards: radius `--card-radius` (16px), padding `--card-pad` (20px), 16px between cards. One accent color. Pill shapes only for tabs, filter chips and badges.
 - Every color is a `:root` token with a dark-mode value.
 
-The wine list and detail pages are not fold cards (photo rows that open a page, and always-visible sections), so these rules don't apply there.
+와인 기록:
+- Tabs are the wine-type filters (전체, 레드, 화이트 …) with counts. The card title is "모든 와인" or "레드 와인" etc., the badge is the bottle count, and the description line holds the latest date and the sort menu.
+- Wine rows (photo, type · vintage, name `--fs-m` bold, country · grape) sit inside the card with dividers, not in separate boxes. When sorted by date, a gray date label starts each day.
+- Tapping a row opens the detail page, so these rows have › instead of ＋.
+
+와인 노트:
+- Tabs: 레드 품종 · 화이트 품종 · 프랑스 · 이탈리아 · 스페인 · 포르투갈 · 독일 · 오스트리아 · 헝가리 · 신대륙 · 기초 개념 (`noteTabs` in `index.html`). Varieties are split by the `whiteVarieties` list, and regions by country from their note page number (`regionCountry`). When a region note is added to `data/notes.json`, update `regionCountry` too.
+- The last tab picked is remembered in localStorage `wine-notes-kind` (falls back to the first tab). Opening a note from a wine record switches to its tab and opens it.
+- A collapsed row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: country for mixed-country tabs, English name, record count). Never put the note text in a collapsed row; it shows at the top of the opened row.
+- Opened row: ＋ becomes －, the title color stays the same, only the title row gets `--disclosure-bg`, and a 3px `--accent` bar runs down the left edge of the whole opened range. Content starts 14px below the title row's line. The opened title sticks just under the tab row, and tapping it to fold scrolls back to the title.
+- Items inside an opened row (linked wine records) are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
+
+The detail page is a reading page with always-visible sections, so the fold-card rules don't apply there.
