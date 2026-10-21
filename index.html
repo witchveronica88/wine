@@ -1295,7 +1295,8 @@ main.is-searching { --stick: 0px; }
 .score-value { flex: 0 0 auto; color: var(--accent); font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
 .score-info { margin: 2px 0 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); overflow-wrap: anywhere; }
 /* 지역 · 품종 글 안의 노트 이름: 색만 바꾼다 */
-.fact dd .inline-note-link { display: inline; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: inherit; text-align: inherit; cursor: pointer; }
+.fact dd .inline-note-link,
+.text-items dd .inline-note-link { display: inline; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: inherit; text-align: inherit; cursor: pointer; }
 
 /* 사진 아래 내 평가: 별점과 한줄평 */
 .wine-mine { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 16px; }
@@ -2048,7 +2049,7 @@ function noteItemHTML(note) {
     html += '<div class="note-content' + (linked.length > 0 ? " has-list" : "") + '" id="note-pages-' + note.id + '">';
     /* 한 줄 설명도 왼쪽 이름 칸 목록의 첫 항목으로 넣는다 (사전은 "뜻", 품종 · 산지는 "특징") */
     const items = (note.summary ? [[note.kind === "basics" ? "뜻" : "특징", esc(note.summary)]] : [])
-      .concat(note.details.map(function (d) { return [d[0], esc(d[1])]; }));
+      .concat(note.details.map(function (d) { return [d[0], noteDetailHTML(note, d[0], d[1])]; }));
     if (items.length > 0) html += textItemsHTML(items);
     html += '<div class="note-pages">';
     note.pages.filter(Boolean).forEach(function (pageUrl, index) {
@@ -2091,6 +2092,11 @@ function notesResultsHTML() {
 /* ================= detail view ================= */
 function factHTML(label, inner) {
   return '<div class="fact"><dt>' + esc(label) + "</dt><dd>" + inner + "</dd></div>";
+}
+/* 산지 노트의 품종 항목은 품종 이름만 색으로 바꿔 그 품종 노트로 잇는다 (와인 기록의 품종 · 지역과 같은 방식) */
+function noteDetailHTML(note, label, text) {
+  if (note.kind === "regions" && (label === "품종" || label === "주요 품종")) return linkNotesInText(text, "varieties");
+  return esc(text);
 }
 /* 글 항목(공통 서식): 회색 굵은 이름 아래에 본문. 노트 자세한 내용과 와인 시음 노트가 같이 쓴다 */
 function textItemsHTML(rows) {
