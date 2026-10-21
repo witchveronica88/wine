@@ -97,29 +97,30 @@ Both main screens follow the card rules shared with the classic and princess rep
 
 Common:
 - A row of pill tabs under the search box, sticky at the top and scrollable sideways. The selected tab is scrolled into view.
-- Below it, one card (`.fold-card`): a head with the title (`--fs-l`, bold; same size as the screen title for now), a gray pill count badge on the right, a one-line gray description, then a thin line. Under the head, full-width rows separated by thin lines, at least 44px tall.
-- Cards: radius `--card-radius` (16px), padding `--card-pad` (20px), 16px between cards. One accent color. Pill shapes only for tabs, filter chips and badges.
+- Below it, one card (`.fold-card`) with no head: full-width rows separated by thin lines, at least 44px tall. Gray group labels (`--fs-s` bold) split the rows.
+- No repeated information. A count already shown on a pill is not shown again (no count badge), there is no card title that repeats the picked pill, and no one-line descriptions or "검색 결과" captions. Before adding a label, caption or count, check that the same thing isn't already on screen.
+- Cards: radius `--card-radius` (16px), padding `--card-pad` (20px), 16px between cards. One accent color. Pill shapes only for tabs and filter chips.
 - Every color is a `:root` token with a dark-mode value.
 
 와인 기록:
-- Tabs are the wine-type filters (전체, 레드, 화이트 …) with counts, plain text with no colored dots. The card title is "모든 와인" or "레드 와인" etc., the badge is the bottle count, and the description line holds the latest date and the sort menu.
+- Tabs are the wine-type filters (전체, 레드, 화이트 …) with counts, plain text with no colored dots. The first row of the card holds the first year label on the left and the sort menu on the right (최근 마신 순 · 이름 순; 평점 높은 순 appears only once some wine has a rating).
 - Wine rows follow the princess book rows: a small photo (40×56, 4px corners, light shadow), the name (`--fs-m` bold), one gray line (type · vintage · country), and on the right the date with ＋ under it. Rows sit inside the card with dividers, not in separate boxes. No colored type dots anywhere, and no grape list or tasting text in the row.
 - Sorted by date, a gray year label ("2026년") starts each year and the row date is month.day. Other sorts show a short year (26.10.5).
 - Tapping a row opens it in place (first level: full-width title background + accent bar, sticky under the tab row). There is no separate detail page. Only one wine and one inner section are open at a time. A link from a study note switches to 와인 기록, clears the filters and search, opens that wine and scrolls to it.
 
 Bottom tabs: 기록 · 품종 · 산지 · 사전 (4 tabs). The app opens on 기록 (a pull-to-refresh keeps the current tab). Each tab keeps its own scroll position while the app is open.
 
-Search (통합 검색): every tab has the same search box ("와인, 품종, 산지, 개념 검색"), and it always searches everything at once. While there is a query, the pill row and the tab's card are replaced by "‘…’ 검색 결과" and one card per kind that has hits, in tab order: 와인 기록 (n병), 품종, 산지, 사전. Rows in the results open in place like everywhere else. Clearing the box or switching bottom tabs ends the search.
+Search (통합 검색): every tab has the same search box ("와인, 품종, 산지, 개념 검색"), and it always searches everything at once. While there is a query, the pill row and the tab's card are replaced by one card per kind that has hits, in tab order, each starting with a gray label ("와인 기록 · 2병", "품종 · 3종", "산지 · 1곳", "사전 · n개"). Search also looks inside the note details. Rows in the results open in place like everywhere else. Clearing the box or switching bottom tabs ends the search.
 
 품종 · 산지 · 사전 (note tabs, `noteTabs` in `index.html`):
-- The pill row holds the groups of that tab with counts: 품종 = 전체 · 레드 품종 · 화이트 품종 (split by the `whiteVarieties` list); 산지 = 전체 · countries in note order (`regionCountry`, from the note page number); 사전 = 전체 · 종류 · 맛과 향 · 마시기 · 용어 (the `group` in each `basicRows` entry). When a variety or region note is added to `data/notes.json`, update `whiteVarieties` / `regionCountry` too.
-- The card title is "모든 품종" / "모든 산지" / "모든 개념" or the picked group, the badge is the count, and the description line is the tab intro.
+- The pill row holds the groups of that tab with counts: 품종 = 전체 · 레드 · 화이트 (split by the `whiteVarieties` list); 산지 = 전체 · countries in note order (`regionCountry`, from the note page number); 사전 = 전체 · 종류 · 맛과 향 · 마시기 · 용어 (the `group` in each `basicRows` entry). When a variety or region note is added to `data/notes.json`, update `whiteVarieties` / `regionCountry` too.
 - One level of note ＋ rows. Under 전체, a gray group label (like the year label in 와인 기록) starts each group.
 - Switching bottom tabs closes the open note.
 - Only one note is open at a time. Opening a note from a wine record switches to its tab, picks its group pill, opens the note and scrolls to it.
 - A collapsed note row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count). Never put the note text in a collapsed row; it shows at the top of the opened row.
 - Opened state: ＋ becomes －, the title color stays the same, only the title row gets `--disclosure-bg` across the full card width, a 3px `--accent` bar runs down the left edge of the opened range, and the title sticks just under the pill row (`--stick`). Tapping a stuck title to fold scrolls back to that title.
-- Items inside an opened note (linked wine records) are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
+- An opened note shows, in order: the one-line summary, the details (each a gray `--fs-s` label above `--fs-m` text), then "마셔 본 와인" with the linked wine records (only when there are any). The linked wines are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
+- Note details live in `data/notes.json` → `details.<kind>.<title>` as `[label, text]` pairs. 품종: 향과 맛 · 구조 · 주요 산지 · 음식. 산지: 기후와 땅 · 주요 품종 · 스타일 · 알아두기. 사전: 자세히 · 알아두기. One or two plain sentences each, ending in "~다." When adding a note, add its details too.
 
 ### 와인 안쪽 내용 (펼친 와인)
 
@@ -127,15 +128,14 @@ Every opened wine uses the same order. Skip any part that has no data.
 
 1. Bottle photo (`photo_url`), with pinch zoom.
 2. One-line verdict: the first line of `buy_verdict`, `--fs-m` bold.
-3. Basic facts, always visible: label–value rows (label `--fs-s` gray in a 56px column, value `--fs-m`), no dividers. Order: 생산자 · 나라 · 지역 · 품종 · 빈티지 · 도수 · 용량 · 마신 날 · 구매 (price · place) · 내 별점. 지역 and 품종 link to their study notes. Short facts only, never prose.
+3. Basic facts, always visible: label–value rows (label `--fs-s` gray in a 56px column, value `--fs-m`), no dividers. Order: 생산자 · 지역 · 품종 · 도수 · 용량 · 마신 날 · 구매 (price · place) · 내 별점. 나라 and 빈티지 are left out because the sticky wine row above already shows type · vintage · country. 지역 and 품종 link to their study notes. Short facts only, never prose.
 4. Inner ＋ rows, closed by default, in this order:
    - 내 메모 (`personal_notes`)
-   - 시음 노트: 향 · 맛 · 여운 · 페어링, each a gray label above its text
-   - 맛: 당도 · 산도 · 타닌 · 바디 · 여운 bars
+   - 시음 노트: first the 당도 · 산도 · 타닌 · 바디 · 여운 bars, then 향 · 맛 · 여운 · 페어링, each a gray label above its text
    - 점수: one divider row per score (big number, source, gray vintage · count · note)
-   - 구매 판단 근거: the rest of `buy_verdict` as bullets; the summary shows the count and the exchange-rate date
+   - 구매 판단 근거: the rest of `buy_verdict` as bullets, then a gray "YYYY.MM.DD 환율 기준" line
    - 조사 메모 (`info_notes`) as bullets
-   A collapsed inner row shows only a count or the item names ("3개", "향 · 맛 · 여운 · 페어링"), never the text. Inner rows follow the inner-level opened style: full-width background with the outer bar redrawn, sticky under the wine row, content indented 14px behind a 2px gray guide line.
+   A collapsed inner row shows only its title (no counts or item lists). Inner rows follow the inner-level opened style: full-width background with the outer bar redrawn, sticky under the wine row, content indented 14px behind a 2px gray guide line.
 5. No 수정 · 삭제 buttons. Only a leftover device-only change shows a small "원래 기록으로 되돌리기" or "이 기기에서 지우기" at the bottom.
 
 When writing a record, fill the fields so they land in the right place:
