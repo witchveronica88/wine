@@ -155,7 +155,11 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
 
 - In 지역 and 품종 facts the text stays as written, and only the part that names a note is shown in `--accent` color (no bold, no icon). Tapping it opens that note in its tab. Example: "토카이(토카이-헤저여)" → only "토카이" is colored.
 - Matching (`matchNotesInText`) checks each note's title, English name and aliases, ignoring spaces, "·", "-", "/" and brackets. When names overlap the longer one wins ("쁘띠 시라" beats "시라"), and each note is linked once, at its first appearance. The same matching decides which wines an opened note lists.
-- The same coloring is used inside notes: in a 산지 note, the 품종 item links each grape name to its 품종 note (`noteDetailHTML`).
+- Links go both ways and everywhere text is shown (`linkAllNotes`): every 품종, 산지 and 사전 name found in a note's 특징/뜻 and details, and in a wine's 한줄평, 내 메모, 시음 노트, 구매 판단 and 조사 메모, is colored the same way and opens its note. Rules:
+  - A note never links to itself, and within one block (one opened note, or one opened wine section) each note is linked only at its first appearance, so the text doesn't turn all green.
+  - Overlaps: the longer name wins; at equal length an exact note title beats an alias, then 품종/산지 beat 사전 (so "샴페인" opens the 사전 note, not 샹파뉴 via its alias).
+  - Names shorter than two characters (사전 "색") are never matched.
+  - 지역 and 품종 facts keep their own matching above (one kind each).
 - Every grape and region in `data/wines.json` should link. When a new wine brings a grape or region with no note, add the note (row + details) to `data/notes.json`; when it is only a different spelling ("카버네 소비뇽", "비우라"), add an alias instead. Don't add an alias that names a wider area than the note ("토스카나" is not 키안티).
 
 ### 펼친 내용의 공통 서식 (노트 · 와인)
