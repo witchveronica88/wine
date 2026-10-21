@@ -1063,7 +1063,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   box-shadow: inset 3px 0 0 var(--accent), 0 1px 0 var(--border);
 }
 .note-content { padding: 14px var(--card-pad) var(--card-pad); }
-/* 안쪽 단계(묶음 안의 노트 줄): 안쪽 폭에만 배경, 컬러바 없음, 펼친 내용은 회색 안내선을 두고 들여 쓴다 */
+/* 안쪽 단계(묶음 안의 노트 줄): 제목 줄 배경은 카드 끝까지. 새 막대는 없고, 배경이 덮는 바깥 막대만 같은 자리에 다시 그린다.
+   펼친 내용은 회색 안내선을 두고 들여 써서 한 단계 안쪽인 걸 보인다 */
 .note-group-body { padding: 4px var(--card-pad) 12px; }
 .note-item.is-nested { scroll-margin-top: calc(var(--stick) + 52px); }
 .note-item.is-nested > .fold-row { padding: 12px 0; background: transparent; }
@@ -1071,12 +1072,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   position: sticky;
   top: calc(var(--stick) + 52px);
   z-index: 2;
-  width: calc(100% + 24px);
-  margin: 0 -12px;
-  padding: 12px;
-  border-radius: 8px;
+  width: calc(100% + 2 * var(--card-pad));
+  margin: 0 calc(-1 * var(--card-pad));
+  padding: 12px var(--card-pad);
   background: var(--disclosure-bg);
-  box-shadow: 0 0 0 5px var(--surface);
+  box-shadow: inset 3px 0 0 var(--accent), 0 1px 0 var(--border);
 }
 .note-item.is-nested > .note-content { margin: 4px 0 8px; padding: 8px 0 8px 14px; border-left: 2px solid var(--border); }
 .note-lead + .note-linked-wines { margin-top: 16px; }

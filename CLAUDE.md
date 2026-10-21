@@ -109,7 +109,7 @@ Common:
 - A collapsed note row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count; country too in search results). Never put the note text in a collapsed row; it shows at the top of the opened row.
 - Opened state, same everywhere: ＋ becomes －, and the title color stays the same.
   - First level (group rows, or note rows in 기초 개념 and search): only the title row gets `--disclosure-bg`, full card width, and a 3px `--accent` bar runs down the left edge of the whole opened range. The title sticks just under the tab row (`--stick`).
-  - Inner level (note rows inside a group): `--disclosure-bg` only across the inner width (12px past the text on each side, 8px corners), no accent bar, a 5px `--surface` box-shadow so text doesn't show around it while sticky. It sticks under the group row (`--stick` + 52px). The opened content is indented 14px with a 2px `--border` guide line on its left.
+  - Inner level (note rows inside a group): the title row's `--disclosure-bg` also runs the full card width, with square corners. No new bar for this level; the outer 3px accent bar is redrawn at the same spot so it doesn't break where the background covers it. It sticks under the group row (`--stick` + 52px). The opened content is indented 14px with a 2px `--border` guide line on its left, which is what marks it as one level in.
   - Tapping a stuck title to fold scrolls back to that title.
 - Items inside an opened note (linked wine records) are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
 
