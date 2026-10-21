@@ -1197,7 +1197,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .wine-photo .pinch-image--contain img { padding: 0; }
 .wine-verdict { margin: 0 0 16px; font-size: var(--fs-m); line-height: var(--lh-m); }
 .wine-facts { display: grid; gap: 6px; margin: 0; }
-.wine-facts .fact { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.wine-facts .fact { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: baseline; }
 .wine-facts .fact dt { margin: 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
 .wine-facts .fact dd { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); }
 .wine-prose { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); white-space: pre-wrap; }
@@ -1270,10 +1270,10 @@ main.is-searching { --stick: 0px; }
 .wine-rate-date { margin: 10px 0 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
 /* 펼친 노트의 자세한 내용: 회색 이름표 아래 본문 */
 /* 글 항목(공통): 노트 자세한 내용, 와인 시음 노트 */
-/* 항목 이름: 회색 굵은 14px 아래에 가는 선을 긋고, 본문은 선 아래에 쓴다 */
-.text-items { display: grid; gap: 20px; margin: 0; }
-.text-items > div { min-width: 0; display: grid; }
-.text-items dt { margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; }
+/* 항목 이름은 왼쪽 64px 칸(회색 굵은 14px), 본문은 오른쪽. 기본 정보(.wine-facts)와 같은 칸 너비 */
+.text-items { display: grid; gap: 16px; margin: 0; }
+.text-items > div { min-width: 0; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.text-items dt { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 700; word-break: keep-all; }
 .text-items dd { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); overflow-wrap: anywhere; }
 .text-items .taste-bars { gap: 6px; }
 .text-items .taste-bar-row { grid-template-columns: 32px minmax(0, 1fr) 12px; gap: 10px; }
