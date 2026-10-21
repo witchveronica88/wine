@@ -132,9 +132,9 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
 
 An opened note and an opened wine use the same pieces, so the same kind of text always looks the same:
 
-- **One-line summary** at the top: `--fs-m` regular weight, 16px above the next part. Note → `summary`; wine → first line of `buy_verdict`. Bold is kept for item names only.
-- **Text items** (`textItemsHTML`, `.text-items`): the item name in `--fs-m` bold, normal text color, on its own line like a small heading; the text in `--fs-m` regular right below (4px gap); 18px between items. No dividers, no boxes. Used for note details and the wine's 시음 노트.
-- Anything inside an item sits one step lower: gray `--fs-s` regular. The wine's 구조 item holds thin bars (6px) with gray `--fs-s` names (당도 · 산도 · 타닌 · 바디 · 여운) and gray numbers, so they never look like item names.
+- **One-line summary** at the top: `--fs-m` regular weight, 16px above the next part. Note → `summary`; wine → first line of `buy_verdict`. Not bold.
+- **Text items** (`textItemsHTML`, `.text-items`): the item name in `--fs-s` gray bold with a thin `--border` line under it (6px below the name), the text in `--fs-m` regular 8px below the line, 20px between items. The line under each name is the only divider; no boxes. Used for note details and the wine's 시음 노트.
+- Anything inside an item sits under the line in regular weight. The wine's 구조 item holds thin bars (6px) with gray `--fs-s` regular names (당도 · 산도 · 타닌 · 바디 · 여운) and gray numbers; only item names are bold and underlined, so the two never look alike.
 - **Short facts** (`.wine-facts`): label and value on one line, label `--fs-s` gray bold in a 56px column. Only for one-line facts (생산자, 도수 …), never prose.
 - **Bullets** (`.note-list`): one fact per bullet, accent markers.
 - Same idea, same label in both places: 구조 (note text / wine bars) and 음식 (note text / wine `food_pairing`). Use these names; don't say 페어링 in one place and 음식 in another.
