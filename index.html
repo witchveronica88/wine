@@ -1261,7 +1261,7 @@ main.is-searching { --stick: 0px; }
 }
 
 /* 카드 머리 없이: 첫 줄에 첫 연도와 정렬 메뉴 */
-.wine-list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px var(--card-pad) 0; }
+.wine-list-head { min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px var(--card-pad) 0; }
 .wine-list-head .wine-year { padding: 0; }
 .wine-list-head .sort-control select { padding-top: 4px; padding-bottom: 4px; font-size: var(--fs-s); line-height: var(--lh-s); }
 .wine-rate-date { margin: 10px 0 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); }
@@ -1911,24 +1911,27 @@ function typeFilterHTML() {
   });
   return html + "</div>";
 }
-function wineListHTML(list) {
+/* 와인 기록 카드: 최근 마신 순이면 연도마다 카드를 따로 두고, 다른 정렬이면 카드 하나.
+   카드 첫 줄은 연도 이름표, 첫 카드의 첫 줄 오른쪽에는 정렬 메뉴 */
+function wineCardsHTML(list) {
   if (list.length === 0) {
-    return '<div class="no-results"><p>조건에 맞는 와인이 없습니다.</p><button class="text-button" data-action="reset-filters">전체 보기</button></div>';
+    return '<div class="fold-card wine-card"><div class="wine-list-head"><span class="wine-year"></span>' + sortSelectHTML() + "</div>"
+      + '<div class="no-results"><p>조건에 맞는 와인이 없습니다.</p><button class="text-button" data-action="reset-filters">전체 보기</button></div></div>';
   }
-  let html = '<div class="wine-list">';
-  list.forEach(function (wine, index) {
-    const byDate = sortMode === "recent" && Boolean(wine.consumed_date);
-    const year = byDate ? wine.consumed_date.slice(0, 4) : "";
-    const prev = index > 0 ? list[index - 1] : null;
-    const newYear = byDate && (!prev || !prev.consumed_date || prev.consumed_date.slice(0, 4) !== year);
-    /* 첫 줄: 첫 연도 이름표와 정렬 메뉴 */
-    if (index === 0) html += '<div class="wine-list-head"><span class="wine-year">' + (newYear ? esc(year) + "년" : "") + "</span>" + sortSelectHTML() + "</div>";
-    html += '<div class="wine-list-entry">'
-      + (newYear && index > 0 ? '<div class="wine-year">' + esc(year) + "년</div>" : "")
-      + wineRowHTML(wine, !byDate)
-      + "</div>";
+  const groups = [];
+  list.forEach(function (wine) {
+    const year = sortMode === "recent" && wine.consumed_date ? wine.consumed_date.slice(0, 4) : "";
+    const last = groups[groups.length - 1];
+    if (last && (sortMode !== "recent" || last.year === year)) last.wines.push(wine);
+    else groups.push({ year: year, wines: [wine] });
   });
-  return html + "</div>";
+  return groups.map(function (group, index) {
+    return '<div class="fold-card wine-card"><div class="wine-list-head"><span class="wine-year">' + (group.year ? esc(group.year) + "년" : "") + "</span>"
+      + (index === 0 ? sortSelectHTML() : "") + "</div>"
+      + '<div class="wine-list">' + group.wines.map(function (wine) {
+        return '<div class="wine-list-entry">' + wineRowHTML(wine, sortMode !== "recent") + "</div>";
+      }).join("") + "</div></div>";
+  }).join("");
 }
 /* 평점이 하나도 없으면 평점 순은 의미가 없으니 뺀다 */
 function sortSelectHTML() {
@@ -2013,8 +2016,7 @@ function collectionHTML() {
 }
 function recordsBodyHTML() {
   if (isSearching()) return searchResultsHTML();
-  return typeFilterHTML()
-      + '<div class="fold-card wine-card"><div id="wine-results">' + wineListHTML(filteredWines()) + "</div></div>";
+  return typeFilterHTML() + wineCardsHTML(filteredWines());
 }
 
 function bottomNavHTML() {

@@ -132,9 +132,10 @@ Common:
 - Every color is a `:root` token with a dark-mode value.
 
 와인 기록:
-- Tabs are the wine-type filters (전체, 레드, 화이트 …) with counts, plain text with no colored dots. The first row of the card holds the first year label on the left and the sort menu on the right (최근 마신 순 · 이름 순; 평점 높은 순 appears only once some wine has a rating).
+- Tabs are the wine-type filters (전체, 레드, 화이트 …) with counts, plain text with no colored dots.
+- Sorted by date (최근 마신 순), each year is its own card (`wineCardsHTML`), 16px apart, newest year first. Each card starts with a gray year label row ("2026년"); the first card's label row also holds the sort menu on the right (최근 마신 순 · 이름 순; 평점 높은 순 appears only once some wine has a rating). Other sorts show one card with no year label.
 - Wine rows follow the princess book rows: a small photo (40×56, 4px corners, light shadow), the name (`--fs-m` bold), one gray line (type · vintage · country), and on the right the date with ＋ under it. Rows sit inside the card with dividers, not in separate boxes. No colored type dots anywhere, and no grape list or tasting text in the row.
-- Sorted by date, a gray year label ("2026년") starts each year and the row date is month.day. Other sorts show a short year (26.10.5).
+- Sorted by date, the row date is month.day (the card already says the year). Other sorts show a short year (26.10.5).
 - Tapping a row opens it in place (first level: full-width title background + accent bar, sticky under the tab row). There is no separate detail page. Only one wine and one inner section are open at a time. A link from a study note switches to 와인 기록, clears the filters and search, opens that wine and scrolls to it.
 
 Bottom tabs: 기록 · 품종 · 산지 · 사전 (4 tabs). The app opens on 기록 (a pull-to-refresh keeps the current tab). Each tab keeps its own scroll position while the app is open.
