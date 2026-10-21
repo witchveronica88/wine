@@ -1179,7 +1179,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .wine-row-meta .local-badge { margin-left: 6px; }
 .wine-row-side { align-self: start; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-top: 1px; }
 .wine-row-date { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.wine-card .row-arrow svg { width: 16px; height: 16px; }
 .wine-card .no-results { padding: 32px var(--card-pad); }
 @media (max-width: 420px) {
   .type-filter { margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; }
@@ -1189,6 +1188,56 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .scores-list { gap: 0; border-top: 1px solid var(--border); }
 .score-row,
 .score-row.vivino-score { min-height: 0; padding: 12px 0; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; box-shadow: none; }
+
+/* 와인 기록: ＋ 줄을 펼치면 안쪽 내용이 그 자리에서 열린다 (첫 단계: 카드 폭 배경 + 컬러바, 안쪽 단계: 회색 안내선) */
+.brand-page { --stick: 56px; }
+.wine-item { scroll-margin-top: var(--stick); }
+.wine-item.open { box-shadow: inset 3px 0 0 var(--accent); }
+.wine-card .wine-item.open > .wine-row {
+  position: sticky;
+  top: var(--stick);
+  z-index: 3;
+  background: var(--disclosure-bg);
+  box-shadow: inset 3px 0 0 var(--accent), 0 1px 0 var(--border);
+}
+.wine-row-side .fold-sign { width: 20px; height: 20px; }
+.wine-body { padding: 14px var(--card-pad) var(--card-pad); }
+.wine-photo { height: 260px; margin-bottom: 16px; border-radius: 8px; overflow: hidden; background: var(--photo-bg); }
+.wine-photo .pinch-image,
+.wine-photo .pinch-image-frame,
+.wine-photo img { background: transparent; border: 0; }
+.wine-photo .pinch-image--contain img { padding: 0; }
+.wine-verdict { margin: 0 0 14px; font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
+.wine-facts { display: grid; gap: 6px; margin: 0; }
+.wine-facts .fact { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.wine-facts .fact dt { margin: 0; color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-s); font-weight: 400; }
+.wine-facts .fact dd { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); }
+.wine-facts--stack { gap: 12px; }
+.wine-facts--stack .fact { grid-template-columns: 1fr; gap: 2px; }
+.wine-prose { margin: 0; font-size: var(--fs-m); line-height: var(--lh-m); white-space: pre-wrap; }
+.wine-sections { margin-top: 16px; border-top: 1px solid var(--border); }
+.wine-section + .wine-section { border-top: 1px solid var(--border); }
+.wine-section { scroll-margin-top: calc(var(--stick) + var(--row-h, 72px)); }
+.wine-section > .fold-row { padding: 12px 0; background: transparent; }
+.wine-section.open > .fold-row {
+  position: sticky;
+  top: calc(var(--stick) + var(--row-h, 72px));
+  z-index: 2;
+  width: calc(100% + 2 * var(--card-pad));
+  margin: 0 calc(-1 * var(--card-pad));
+  padding: 12px var(--card-pad);
+  background: var(--disclosure-bg);
+  box-shadow: inset 3px 0 0 var(--accent), 0 1px 0 var(--border);
+}
+.wine-section-body { margin: 4px 0 12px; padding: 8px 0 8px 14px; border-left: 2px solid var(--border); }
+.wine-section-body .scores-list { border-top: 0; }
+.wine-section-body .score-row:last-child { border-bottom: 0; }
+.wine-section-body .score-row:first-child { padding-top: 0; }
+.wine-actions { margin-top: 16px; text-align: center; }
+.wine-action-row { display: flex; justify-content: flex-end; gap: 8px; }
+.wine-action-row .text-button, .wine-action-row .delete-link { min-height: 44px; padding: 0 12px; font-size: var(--fs-s); }
+.wine-actions .delete-confirm { text-align: left; }
+.linked-wine-mark { background-color: var(--photo-bg); }
     </style>
   </head>
   <body>
@@ -1266,6 +1315,7 @@ function wineMarkHTML(type) {
 function starsHTML(rating) {
   return '<span class="rating" aria-label="평점 5점 만점에 ' + (rating / 2) + '점">' + (rating / 2).toFixed(1) + "</span>";
 }
+const ICON_GLASS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l-.5 5a4.5 4.5 0 0 1-9 0L7 3ZM12 12.5V20M8 21h8" /></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>';
 const ICON_ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>';
 const ICON_PLUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>';
@@ -1476,7 +1526,9 @@ function loadData() {
 /* ================= app state ================= */
 let view = "collection"; /* collection | detail | form */
 let activeTab = "records"; /* records | notes */
-let selectedId = null;
+let selectedId = null; /* the wine being edited / deleted (same as wineOpenId while one is open) */
+let wineOpenId = null;
+let wineOpenSection = null;
 let formMode = null; /* "edit" while the edit form is open */
 let searchText = "";
 let sortMode = "recent";
@@ -1640,20 +1692,24 @@ function filteredWines() {
   return matched;
 }
 
-/* 와인 한 줄 (프린세스 책 줄과 같은 짜임): 작은 사진 · 이름 · 회색 한 줄, 오른쪽에 날짜와 › */
+/* 와인 한 줄 (프린세스 책 줄과 같은 짜임): 작은 사진 · 이름 · 회색 한 줄, 오른쪽에 날짜와 ＋. 펼치면 안쪽 내용이 바로 아래에 열린다 */
 function wineRowHTML(wine, withYear) {
   const thumb = wine.photo_thumbnail_url || wine.photo_url
     ? '<img src="' + esc(wine.photo_thumbnail_url || wine.photo_url) + '" loading="lazy" decoding="async" alt="" />'
-    : wineMarkHTML(wine.wine_type);
+    : "";
   const meta = [typeLabels[wine.wine_type] || "", wine.vintage ? vintageLabel(wine.vintage) : "", wine.country].filter(Boolean).join(" · ");
-  const ariaLabel = (wine.vintage ? vintageLabel(wine.vintage) + " " : "") + wine.name + " 기록 열기";
-  return '<button class="wine-row" data-action="open-detail" data-id="' + esc(wine.id) + '" aria-label="' + esc(ariaLabel) + '">'
+  const ariaLabel = (wine.vintage ? vintageLabel(wine.vintage) + " " : "") + wine.name;
+  const isOpen = wineOpenId === String(wine.id);
+  return '<article class="wine-item' + (isOpen ? " open" : "") + '" id="wine-' + esc(wine.id) + '">'
+    + '<button class="wine-row" data-action="toggle-wine" data-id="' + esc(wine.id) + '" aria-expanded="' + isOpen + '" aria-label="' + esc(ariaLabel) + '">'
     + '<span class="wine-thumb">' + thumb + "</span>"
     + '<span class="wine-row-copy"><strong class="wine-row-name">' + esc(wine.name) + "</strong>"
-    + '<span class="wine-row-meta">' + wineMarkHTML(wine.wine_type) + esc(meta) + localBadgeHTML(wine) + "</span></span>"
+    + '<span class="wine-row-meta">' + esc(meta) + localBadgeHTML(wine) + "</span></span>"
     + '<span class="wine-row-side">' + (wine.consumed_date ? '<span class="wine-row-date">' + esc(shortDate(wine.consumed_date, withYear)) + "</span>" : "")
-    + '<span class="row-arrow">' + ICON_ARROW + "</span></span>"
-    + "</button>";
+    + '<span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span></span>"
+    + "</button>"
+    + (isOpen ? wineBodyHTML(wine) : "")
+    + "</article>";
 }
 /* 날짜순일 때는 연도 줄이 따로 있으니 월.일만, 아니면 26.10.5처럼 연도를 붙인다 */
 function shortDate(date, withYear) {
@@ -1677,7 +1733,7 @@ function typeFilterHTML() {
   [["all", "전체", wines.length]].concat(kinds.map(function (key) { return [key, typeLabels[key], counts[key]]; })).forEach(function (item) {
     const active = typeFilter === item[0];
     html += '<button type="button" data-action="type-filter" data-type="' + item[0] + '" aria-pressed="' + active + '" class="' + (active ? "active" : "") + '">'
-      + (item[0] !== "all" ? wineMarkHTML(item[0]) : "") + "<span>" + esc(item[1]) + "</span><b>" + item[2] + "</b></button>";
+      + "<span>" + esc(item[1]) + "</span><b>" + item[2] + "</b></button>";
   });
   return html + "</div>";
 }
@@ -1704,6 +1760,8 @@ function refreshWineResults() {
   if (!results) { render({ keepScroll: true }); return; }
   const list = filteredWines();
   results.innerHTML = wineListHTML(list);
+  initPinchZooms(results);
+  syncWineRowHeight();
   document.getElementById("wine-count").textContent = list.length + "병";
   const clear = document.getElementById("wine-search-clear");
   if (clear) clear.hidden = !searchText;
@@ -1753,7 +1811,7 @@ function collectionHTML() {
 
 function bottomNavHTML() {
   return '<nav class="bottom-nav" aria-label="주요 메뉴">'
-    + '<button data-action="tab" data-tab="records" class="' + (activeTab === "records" ? "active" : "") + '"' + (activeTab === "records" ? ' aria-current="page"' : "") + ">" + wineMarkHTML("red") + "<span>와인 기록</span></button>"
+    + '<button data-action="tab" data-tab="records" class="' + (activeTab === "records" ? "active" : "") + '"' + (activeTab === "records" ? ' aria-current="page"' : "") + ">" + ICON_GLASS + "<span>와인 기록</span></button>"
     + '<button data-action="tab" data-tab="notes" class="' + (activeTab === "notes" ? "active" : "") + '"' + (activeTab === "notes" ? ' aria-current="page"' : "") + ">" + ICON_BOOK + "<span>와인 노트</span></button>"
     + "</nav>";
 }
@@ -1839,7 +1897,7 @@ function noteItemHTML(note, nested) {
         html += '<div class="note-linked-wine-list">';
         linked.forEach(function (wine) {
           html += '<button data-action="open-linked-wine" data-id="' + esc(wine.id) + '" aria-label="' + esc(wine.name) + ' 상세 보기">'
-            + (wine.photo_thumbnail_url ? '<img src="' + esc(wine.photo_thumbnail_url) + '" loading="lazy" decoding="async" alt="" />' : '<span class="linked-wine-mark wine-mark--' + esc(wine.wine_type) + '" aria-hidden="true"></span>')
+            + (wine.photo_thumbnail_url ? '<img src="' + esc(wine.photo_thumbnail_url) + '" loading="lazy" decoding="async" alt="" />' : '<span class="linked-wine-mark" aria-hidden="true"></span>')
             + "<span><strong>" + esc(wine.name) + "</strong>"
             + (wine.consumed_date ? "<small>" + esc(formatDate(wine.consumed_date)) + "</small>" : "")
             + "</span>"
@@ -1913,8 +1971,17 @@ function tasteBarHTML(label, value) {
   return '<div class="taste-bar-row" aria-label="' + esc(label) + " 5단계 중 " + value + '"><span>' + esc(label) + '</span><div class="taste-track" aria-hidden="true"><i style="width: ' + value * 20 + '%"></i></div><b>' + value + "</b></div>";
 }
 
-function detailHTML(wine) {
-  const origin = [wine.country, wine.region].filter(Boolean).join(" · ");
+/* 펼친 와인 안쪽. 순서는 CLAUDE.md "와인 안쪽 내용" 규칙을 따른다 */
+function wineSectionHTML(wine, key, title, summary, inner) {
+  const isOpen = wineOpenSection === key;
+  return '<section class="wine-section' + (isOpen ? " open" : "") + '" id="wine-' + esc(wine.id) + "-" + key + '">'
+    + '<button class="fold-row" data-action="toggle-wine-section" data-section="' + key + '" aria-expanded="' + isOpen + '">'
+    + '<span class="fold-row-copy"><strong>' + esc(title) + "</strong>" + (summary ? "<small>" + esc(summary) + "</small>" : "") + "</span>"
+    + '<span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span></button>"
+    + (isOpen ? '<div class="wine-section-body">' + inner + "</div>" : "")
+    + "</section>";
+}
+function wineBodyHTML(wine) {
   const rateDate = wine.exchange_rate_date ? formatFullDate(wine.exchange_rate_date) : null;
   const verdictBullets = textBullets(wine.buy_verdict || "");
   const verdictJudgment = verdictBullets[0];
@@ -1929,9 +1996,6 @@ function detailHTML(wine) {
   const basisCaveat = wine.basis_note ? "(" + wine.basis_note + ")" : "";
   const aromaCaveat = basisCaveat || aroma.sourceCaveat;
   const tasteCaveat = basisCaveat || taste.sourceCaveat;
-  const hasBuyInfo = verdictBullets.length > 0 || (wine.price_krw !== null && wine.price_krw !== undefined) || Boolean(wine.purchase_place) || Boolean(rateDate);
-  const hasFacts = Boolean(wine.volume_ml || wine.alcohol_percent || wine.vintage || origin || wine.grapes);
-  const hasTastingNotes = Boolean(aroma.text || taste.text || wine.finish || wine.food_pairing);
   const tasteMetrics = [
     { label: "당도", value: wine.sweetness },
     { label: "산도", value: wine.acidity },
@@ -1939,69 +2003,49 @@ function detailHTML(wine) {
     { label: "바디", value: wine.body },
     { label: "여운", value: wine.finish_intensity }
   ].filter(function (m) { return m.value !== null && m.value !== undefined; });
-  const hasMyRecord = Boolean((wine.rating !== null && wine.rating !== undefined) || wine.personal_notes);
-  const grapeNotes = findWineNotes(wine.grapes || "", "varieties");
-  const regionNotesForWine = findWineNotes(wine.region || "", "regions");
+  const hasPrice = wine.price_krw !== null && wine.price_krw !== undefined;
+  const hasRating = wine.rating !== null && wine.rating !== undefined;
 
-  let html = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="detail-title">';
-  html += '<div class="sheet-bar"><button class="icon-button" data-action="close-detail" aria-label="상세 닫기">' + ICON_CLOSE + '</button><button class="text-button" data-action="edit-wine">수정</button></div>';
-  html += '<div class="detail-page">';
-  html += '<header class="detail-hero' + (wine.photo_url ? " has-photo" : "") + '"><div class="detail-cover">';
+  let html = '<div class="wine-body">';
   if (wine.photo_url) {
-    html += pinchZoomHTML(wine.photo_thumbnail_url || wine.photo_url, wine.photo_url, wine.name + " 병 사진", "contain");
-  } else {
-    html += wineMarkHTML(wine.wine_type);
+    html += '<div class="wine-photo">' + pinchZoomHTML(wine.photo_thumbnail_url || wine.photo_url, wine.photo_url, wine.name + " 병 사진", "contain") + "</div>";
   }
-  html += '</div><div class="detail-lead"><div class="detail-meta"><span class="wine-kind">'
-    + wineMarkHTML(wine.wine_type) + esc(typeLabels[wine.wine_type]) + "</span>" + localBadgeHTML(wine) + "</div>"
-    + '<h2 id="detail-title">' + esc(wine.name) + "</h2>"
-    + (wine.producer ? "<p>" + esc(wine.producer) + "</p>" : "")
-    + "</div></header>";
+  if (verdictJudgment) html += '<p class="wine-verdict">' + esc(verdictJudgment) + "</p>";
 
-  if (wine.rating !== null && wine.rating !== undefined) {
-    html += '<section class="record-highlight" aria-label="내 기록 요약"><div><span>내 별점</span>' + starsHTML(wine.rating) + "</div></section>";
+  const facts = [];
+  if (wine.producer) facts.push(factHTML("생산자", esc(wine.producer)));
+  if (wine.country) facts.push(factHTML("나라", esc(wine.country)));
+  if (wine.region) facts.push(factHTML("지역", linkedNotesHTML(wine.region, findWineNotes(wine.region, "regions"))));
+  if (wine.grapes) facts.push(factHTML("품종", linkedNotesHTML(wine.grapes, findWineNotes(wine.grapes, "varieties"))));
+  if (wine.vintage) facts.push(factHTML("빈티지", esc(vintageLabel(wine.vintage))));
+  if (wine.alcohol_percent) facts.push(factHTML("도수", esc(wine.alcohol_percent)));
+  if (wine.volume_ml) facts.push(factHTML("용량", esc(wine.volume_ml) + "ml"));
+  if (wine.consumed_date) facts.push(factHTML("마신 날", esc(formatDate(wine.consumed_date))));
+  if (hasPrice || wine.purchase_place) facts.push(factHTML("구매", esc([hasPrice ? formatWon(wine.price_krw) : "", wine.purchase_place || ""].filter(Boolean).join(" · "))));
+  if (hasRating) facts.push(factHTML("내 별점", starsHTML(wine.rating)));
+  if (facts.length > 0) html += '<dl class="wine-facts">' + facts.join("") + "</dl>";
+
+  let sections = "";
+  if (wine.personal_notes) {
+    sections += wineSectionHTML(wine, "mine", "내 메모", "", '<p class="wine-prose">' + esc(wine.personal_notes) + "</p>");
   }
-
-  if (hasBuyInfo) {
-    html += '<section class="verdict-card"><span class="section-label">구매 판단</span>';
-    if (verdictJudgment) html += "<h3>" + esc(verdictJudgment) + "</h3>";
-    if ((wine.price_krw !== null && wine.price_krw !== undefined) || wine.purchase_place) {
-      html += '<dl class="verdict-facts">';
-      if (wine.price_krw !== null && wine.price_krw !== undefined) html += factHTML("구매가", esc(formatWon(wine.price_krw)));
-      if (wine.purchase_place) html += factHTML("구매처", esc(wine.purchase_place));
-      html += "</dl>";
-    }
-    if (verdictReasons.length > 0) {
-      html += '<ul class="note-list">' + verdictReasons.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>";
-    }
-    if (rateDate) html += '<p class="verdict-date">' + esc(rateDate) + " 기준</p>";
-    html += "</section>";
+  const tastingRows = [];
+  if (aroma.text) tastingRows.push(["향", "<span>" + esc(aroma.text) + "</span>" + (aromaCaveat ? '<small class="source-caveat">' + esc(aromaCaveat) + "</small>" : "")]);
+  if (taste.text) tastingRows.push(["맛", "<span>" + esc(taste.text) + "</span>" + (tasteCaveat ? '<small class="source-caveat">' + esc(tasteCaveat) + "</small>" : "")]);
+  if (wine.finish) tastingRows.push(["여운", esc(wine.finish)]);
+  if (wine.food_pairing) tastingRows.push(["페어링", esc(wine.food_pairing)]);
+  if (tastingRows.length > 0) {
+    sections += wineSectionHTML(wine, "tasting", "시음 노트", tastingRows.map(function (r) { return r[0]; }).join(" · "),
+      '<dl class="wine-facts wine-facts--stack">' + tastingRows.map(function (r) { return factHTML(r[0], r[1]); }).join("") + "</dl>");
   }
-
-  if (hasFacts) {
-    html += '<section class="detail-section information-section"><h3>기본 정보</h3><dl class="information-list">';
-    if (wine.volume_ml) html += factHTML("용량", esc(wine.volume_ml) + "ml");
-    if (wine.alcohol_percent) html += factHTML("도수", esc(wine.alcohol_percent));
-    if (wine.country) html += factHTML("국가", esc(wine.country));
-    if (wine.region) html += factHTML("지역", linkedNotesHTML(wine.region, regionNotesForWine));
-    if (wine.grapes) html += factHTML("품종", linkedNotesHTML(wine.grapes, grapeNotes));
-    if (wine.vintage) html += factHTML("빈티지", esc(vintageLabel(wine.vintage)));
-    html += "</dl></section>";
+  if (tasteMetrics.length > 0) {
+    sections += wineSectionHTML(wine, "taste", "맛", tasteMetrics.length + "가지",
+      '<div class="taste-bars">' + tasteMetrics.map(function (m) { return tasteBarHTML(m.label, m.value); }).join("") + "</div>");
   }
-
-  if (hasTastingNotes) {
-    html += '<section class="detail-section tasting-notes-section"><h3>시음 노트</h3><dl class="tasting-notes-list">';
-    if (aroma.text) html += factHTML("향", "<span>" + esc(aroma.text) + "</span>" + (aromaCaveat ? '<small class="source-caveat">' + esc(aromaCaveat) + "</small>" : ""));
-    if (taste.text) html += factHTML("맛", "<span>" + esc(taste.text) + "</span>" + (tasteCaveat ? '<small class="source-caveat">' + esc(tasteCaveat) + "</small>" : ""));
-    if (wine.finish) html += factHTML("여운", esc(wine.finish));
-    if (wine.food_pairing) html += factHTML("페어링", esc(wine.food_pairing));
-    html += "</dl></section>";
-  }
-
   if (wine.scores && wine.scores.length > 0) {
-    html += '<section class="detail-section scores-section"><h3>점수</h3><div class="scores-list">';
+    let scoresHTML = '<div class="scores-list">';
     wine.scores.forEach(function (score) {
-      html += '<article class="score-row' + (String(score.source).toLowerCase() === "vivino" ? " vivino-score" : "") + '">'
+      scoresHTML += '<article class="score-row">'
         + '<div class="score-main"><strong>' + esc(score.score) + "</strong><span>" + esc(score.source) + "</span></div>"
         + '<div class="score-meta">'
         + (score.vintage ? "<span>" + esc(score.vintage === "통산" ? "통산" : score.vintage === "미상" ? "빈티지 미상" : score.vintage + " 빈티지") + "</span>" : "")
@@ -2009,37 +2053,28 @@ function detailHTML(wine) {
         + (score.note ? "<span>" + esc(score.note) + "</span>" : "")
         + "</div></article>";
     });
-    html += "</div></section>";
+    sections += wineSectionHTML(wine, "scores", "점수", wine.scores.length + "개", scoresHTML + "</div>");
   }
-
-  if (tasteMetrics.length > 0) {
-    html += '<section class="detail-section taste-bars-section"><h3>맛</h3><div class="taste-bars">'
-      + tasteMetrics.map(function (m) { return tasteBarHTML(m.label, m.value); }).join("")
-      + "</div></section>";
+  if (verdictReasons.length > 0) {
+    sections += wineSectionHTML(wine, "verdict", "구매 판단 근거", verdictReasons.length + "개" + (rateDate ? " · " + rateDate + " 기준" : ""),
+      '<ul class="note-list">' + verdictReasons.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>");
   }
-
   if (infoBullets.length > 0) {
-    html += '<section class="detail-section"><h3>조사 메모</h3><ul class="note-list">'
-      + infoBullets.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("")
-      + "</ul></section>";
+    sections += wineSectionHTML(wine, "info", "조사 메모", infoBullets.length + "개",
+      '<ul class="note-list">' + infoBullets.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("") + "</ul>");
   }
-
-  if (wine.personal_notes) {
-    html += '<section class="detail-section personal-section"><h3>내 시음 메모</h3><p>' + esc(wine.personal_notes) + "</p></section>";
-  }
-
-  if (!hasBuyInfo && !hasFacts && !hasTastingNotes && !hasMyRecord && infoBullets.length === 0) {
-    html += '<p class="detail-empty">수정에서 와인 정보를 추가할 수 있습니다.</p>';
-  }
+  if (sections) html += '<div class="wine-sections">' + sections + "</div>";
+  if (!verdictJudgment && facts.length === 0 && !sections) html += '<p class="detail-empty">아직 정리된 내용이 없습니다.</p>';
 
   const state = localState(wine);
-  html += '<div class="danger-zone">';
-  if (state === "edited" && !detailConfirmDelete) {
-    html += '<p class="local-note">이 기기에서 고친 내용이 표시되고 있습니다.</p>'
-      + '<button class="text-button" data-action="revert-wine">원래 기록으로 되돌리기</button>';
-  }
+  html += '<div class="wine-actions">';
   if (!detailConfirmDelete) {
-    html += '<button class="delete-link" data-action="ask-delete">기록 삭제</button>';
+    if (state === "edited") {
+      html += '<p class="local-note">이 기기에서 고친 내용이 표시되고 있습니다.</p>'
+        + '<button class="text-button" data-action="revert-wine">원래 기록으로 되돌리기</button>';
+    }
+    html += '<div class="wine-action-row"><button class="text-button" data-action="edit-wine">수정</button>'
+      + '<button class="delete-link" data-action="ask-delete">삭제</button></div>';
   } else {
     html += '<div class="delete-confirm" role="alert"><p>이 기록을 삭제하시겠습니까?</p>'
       + (state === "added" ? "" : '<p class="delete-hint">이 기기에서만 숨겨지고, 공유된 원본 기록은 남습니다.</p>')
@@ -2048,8 +2083,7 @@ function detailHTML(wine) {
       + '<button data-action="confirm-delete">삭제</button>'
       + "</div></div>";
   }
-  html += "</div></div></div>";
-  return html;
+  return html + "</div></div>";
 }
 
 /* ================= form view ================= */
@@ -2273,10 +2307,9 @@ function render(options) {
   const caret = focusId ? active.selectionStart : null;
   const keepY = options.keepScroll ? window.scrollY : null;
 
-  if (view === "detail" && !getWine(selectedId)) { view = "collection"; selectedId = null; }
+  if (wineOpenId && !getWine(wineOpenId)) { wineOpenId = null; wineOpenSection = null; }
   let html = "";
   if (loadState !== "ready") html = stateHTML();
-  else if (view === "detail") html = detailHTML(getWine(selectedId));
   else if (view === "form") html = formHTML();
   else html = activeTab === "records" ? collectionHTML() : notesHTML();
   appEl.innerHTML = html;
@@ -2286,6 +2319,7 @@ function render(options) {
     if (on) row.scrollLeft = on.offsetLeft - (row.clientWidth - on.offsetWidth) / 2;
   });
   initPinchZooms(appEl);
+  syncWineRowHeight();
   bindViewEvents();
   if (options.restoreScroll) applyScroll();
   else if (keepY !== null) window.scrollTo(0, keepY);
@@ -2324,7 +2358,6 @@ function confirmDiscard() {
 }
 function requestClose() {
   if (view === "form") { if (confirmDiscard()) popLayer(closeForm); }
-  else if (view === "detail") popLayer(closeDetail);
 }
 window.addEventListener("popstate", function () {
   if (ignoreNextPop) { ignoreNextPop = false; return; }
@@ -2332,30 +2365,42 @@ window.addEventListener("popstate", function () {
   if (view === "form") {
     if (!confirmDiscard()) { pushLayer(); return; }
     closeForm();
-  } else if (view === "detail") {
-    closeDetail();
   }
 });
 document.addEventListener("keydown", function (event) {
   if (event.key !== "Escape" || event.isComposing) return;
-  if (view === "form" || view === "detail") { event.preventDefault(); requestClose(); }
+  if (view === "form") { event.preventDefault(); requestClose(); }
 });
 
-function openDetail(id) {
-  rememberCollectionScroll();
-  pendingScroll = 1;
-  selectedId = String(id);
-  detailConfirmDelete = false;
-  view = "detail";
-  pushLayer();
-  render({ restoreScroll: true });
+/* 펼친 와인 줄의 높이: 안쪽 제목 줄이 그 아래에 붙는다 */
+function syncWineRowHeight() {
+  appEl.querySelectorAll(".wine-item.open").forEach(function (item) {
+    item.style.setProperty("--row-h", item.querySelector(".wine-row").offsetHeight + "px");
+  });
 }
-function closeDetail() {
-  pendingScroll = collectionScroll;
-  selectedId = null;
-  detailConfirmDelete = false;
+/* 접거나 펼친 뒤 그 줄이 위에 붙은 줄 뒤로 숨었으면 제목 자리로 돌아간다 */
+function keepWineRowInView(item, underRow) {
+  if (!item) return;
+  const tabs = appEl.querySelector(".type-filter");
+  let stick = tabs ? tabs.getBoundingClientRect().bottom : 0;
+  if (underRow) stick += underRow.offsetHeight;
+  const top = item.getBoundingClientRect().top;
+  if (top < stick) window.scrollTo(0, window.scrollY + top - stick);
+}
+/* 노트 등에서 와인으로 갈 때: 와인 기록 탭으로 바꾸고, 필터를 풀고, 그 와인을 펼쳐서 간다 */
+function openWineInRecords(id) {
+  if (!getWine(id)) return;
+  activeTab = "records";
   view = "collection";
-  render({ restoreScroll: true });
+  typeFilter = "all";
+  searchText = "";
+  wineOpenId = String(id);
+  selectedId = wineOpenId;
+  wineOpenSection = null;
+  detailConfirmDelete = false;
+  render();
+  const item = document.getElementById("wine-" + wineOpenId);
+  if (item) item.scrollIntoView({ block: "start" });
 }
 function openEdit() {
   const wine = getWine(selectedId);
@@ -2376,7 +2421,7 @@ function closeForm() {
   pendingScroll = detailScroll;
   formMode = null;
   formDirty = false;
-  view = "detail";
+  view = "collection";
   render({ restoreScroll: true });
 }
 function openWineNote(noteId) {
@@ -2384,7 +2429,6 @@ function openWineNote(noteId) {
   if (!note) return;
   dropLayers(historyDepth);
   pendingScroll = 1;
-  selectedId = null;
   formMode = null;
   view = "collection";
   activeTab = "notes";
@@ -2423,7 +2467,7 @@ function saveForm() {
   dropLayers(1);
   pendingScroll = detailScroll;
   formMode = null;
-  view = "detail";
+  view = "collection";
   render({ restoreScroll: true });
 }
 function deleteSelected() {
@@ -2436,8 +2480,11 @@ function deleteSelected() {
       if (l.deleted.indexOf(id) === -1) l.deleted.push(id);
     }
   });
-  dropLayers(1);
-  closeDetail();
+  wineOpenId = null;
+  wineOpenSection = null;
+  selectedId = null;
+  detailConfirmDelete = false;
+  render({ keepScroll: true });
 }
 function revertSelected() {
   const id = String(selectedId);
@@ -2510,8 +2557,23 @@ appEl.addEventListener("click", function (event) {
   if (!target) return;
   const action = target.getAttribute("data-action");
   if (action === "retry-load") loadData();
-  else if (action === "open-detail") openDetail(target.getAttribute("data-id"));
-  else if (action === "close-detail" || action === "close-form") requestClose();
+  else if (action === "toggle-wine") {
+    const id = target.getAttribute("data-id");
+    wineOpenId = wineOpenId === id ? null : id;
+    selectedId = wineOpenId;
+    wineOpenSection = null;
+    detailConfirmDelete = false;
+    render({ keepScroll: true });
+    keepWineRowInView(document.getElementById("wine-" + id));
+  }
+  else if (action === "toggle-wine-section") {
+    const key = target.getAttribute("data-section");
+    wineOpenSection = wineOpenSection === key ? null : key;
+    render({ keepScroll: true });
+    const item = document.getElementById("wine-" + wineOpenId);
+    if (item) keepWineRowInView(document.getElementById("wine-" + wineOpenId + "-" + key), item.querySelector(".wine-row"));
+  }
+  else if (action === "close-form") requestClose();
   else if (action === "edit-wine") openEdit();
   else if (action === "ask-delete") { detailConfirmDelete = true; render({ keepScroll: true }); }
   else if (action === "cancel-delete") { detailConfirmDelete = false; render({ keepScroll: true }); }
@@ -2549,7 +2611,7 @@ appEl.addEventListener("click", function (event) {
     keepNoteRowInView(document.getElementById(groupId));
   }
   else if (action === "open-note") openWineNote(target.getAttribute("data-note-id"));
-  else if (action === "open-linked-wine") openDetail(target.getAttribute("data-id"));
+  else if (action === "open-linked-wine") openWineInRecords(target.getAttribute("data-id"));
   else if (action === "add-score") {
     form.scores.push({ source: "", vintage: "", score: "", ratingCount: "", note: "" });
     formDirty = true;

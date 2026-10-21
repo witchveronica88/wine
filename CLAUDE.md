@@ -55,7 +55,7 @@ Never paste base64 images into JSON or HTML.
 | `photo_url`, `photo_thumbnail_url` | `photos/NNN.webp` / `photos/NNN-thumb.webp`, or null |
 | `created_at`, `updated_at` | ISO timestamps. Bump `updated_at` when editing a record |
 
-Editing a record that a device has also edited locally: the device keeps showing its own copy until the user taps "원래 기록으로 되돌리기" on the detail page.
+Editing a record that a device has also edited locally: the device keeps showing its own copy until the user taps "원래 기록으로 되돌리기" at the bottom of the opened wine.
 
 ## Checking the app
 
@@ -84,7 +84,7 @@ Pages must not scroll sideways at a 360px phone width.
 
 - Each main screen starts with a small centered title in `.brand-row`: "와인 기록" / "와인 노트", `--fs-l` bold, with a thin double-line decoration on both sides. About 12px above and below.
 - The title is not sticky. It scrolls away and only the tab row stays at the top.
-- There is no in-app "add wine" button or form. The owner sends the details and Claude adds the record to `data/wines.json`. Editing and deleting on the detail page still work (local only).
+- There is no in-app "add wine" button or form. The owner sends the details and Claude adds the record to `data/wines.json`. Editing and deleting from an opened wine still work (local only).
 
 ### Fold cards (카드 규칙)
 
@@ -97,10 +97,10 @@ Common:
 - Every color is a `:root` token with a dark-mode value.
 
 와인 기록:
-- Tabs are the wine-type filters (전체, 레드, 화이트 …) with counts. The card title is "모든 와인" or "레드 와인" etc., the badge is the bottle count, and the description line holds the latest date and the sort menu.
-- Wine rows follow the princess book rows: a small photo (40×56, 4px corners, light shadow), the name (`--fs-m` bold), one gray line (type dot · type · vintage · country), and on the right the date with a › under it. Rows sit inside the card with dividers, not in separate boxes. No grape list or tasting text in the row.
+- Tabs are the wine-type filters (전체, 레드, 화이트 …) with counts, plain text with no colored dots. The card title is "모든 와인" or "레드 와인" etc., the badge is the bottle count, and the description line holds the latest date and the sort menu.
+- Wine rows follow the princess book rows: a small photo (40×56, 4px corners, light shadow), the name (`--fs-m` bold), one gray line (type · vintage · country), and on the right the date with ＋ under it. Rows sit inside the card with dividers, not in separate boxes. No colored type dots anywhere, and no grape list or tasting text in the row.
 - Sorted by date, a gray year label ("2026년") starts each year and the row date is month.day. Other sorts show a short year (26.10.5).
-- Tapping a row opens the detail page.
+- Tapping a row opens it in place (first level: full-width title background + accent bar, sticky under the tab row). There is no separate detail page. Only one wine and one inner section are open at a time. A link from a study note switches to 와인 기록, clears the filters and search, opens that wine and scrolls to it.
 
 와인 노트:
 - Three tabs: 품종 · 산지 · 기초 개념 (`noteTabs` in `index.html`). The last tab picked is remembered in localStorage `wine-notes-kind` (falls back to 품종).
@@ -113,4 +113,25 @@ Common:
   - Tapping a stuck title to fold scrolls back to that title.
 - Items inside an opened note (linked wine records) are divider rows, never bordered or filled boxes. Title `--fs-m` bold, date `--fs-s` gray below, vintage `--fs-s` gray on the right.
 
-The detail page is a reading page with always-visible sections, so the fold-card rules don't apply there. Its scores are divider rows, not boxes.
+### 와인 안쪽 내용 (펼친 와인)
+
+Every opened wine uses the same order. Skip any part that has no data.
+
+1. Bottle photo (`photo_url`), with pinch zoom.
+2. One-line verdict: the first line of `buy_verdict`, `--fs-m` bold.
+3. Basic facts, always visible: label–value rows (label `--fs-s` gray in a 56px column, value `--fs-m`), no dividers. Order: 생산자 · 나라 · 지역 · 품종 · 빈티지 · 도수 · 용량 · 마신 날 · 구매 (price · place) · 내 별점. 지역 and 품종 link to their study notes. Short facts only, never prose.
+4. Inner ＋ rows, closed by default, in this order:
+   - 내 메모 (`personal_notes`)
+   - 시음 노트: 향 · 맛 · 여운 · 페어링, each a gray label above its text
+   - 맛: 당도 · 산도 · 타닌 · 바디 · 여운 bars
+   - 점수: one divider row per score (big number, source, gray vintage · count · note)
+   - 구매 판단 근거: the rest of `buy_verdict` as bullets; the summary shows the count and the exchange-rate date
+   - 조사 메모 (`info_notes`) as bullets
+   A collapsed inner row shows only a count or the item names ("3개", "향 · 맛 · 여운 · 페어링"), never the text. Inner rows follow the inner-level opened style: full-width background with the outer bar redrawn, sticky under the wine row, content indented 14px behind a 2px gray guide line.
+5. 수정 · 삭제 as small text buttons at the bottom right. 삭제 asks for confirmation inline.
+
+When writing a record, fill the fields so they land in the right place:
+- `buy_verdict`: the first line is the verdict in one sentence, ending in "~다". Each following line is one piece of evidence (one price source with its KRW conversion, or one reason).
+- `info_notes`: one fact per bullet (producer, vineyard, vintage, method, serving). Don't repeat the basic facts.
+- `aroma`, `taste`, `finish`, `food_pairing`: one to three sentences each.
+- New information goes into one of the sections above, never a new box. If a new kind of section is really needed, add it as another inner ＋ row and list it here.
