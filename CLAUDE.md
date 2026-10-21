@@ -11,7 +11,7 @@ The owner wants every change live right away: commit and push straight to `main`
 
 - `index.html`: the whole app (CSS + vanilla JS, no build step). At startup it loads `data/wines.json` and `data/notes.json` with `fetch`.
 - `data/wines.json`: every wine record, shared across devices. This is the source of truth.
-- `data/notes.json`: the study-note index (varieties, regions, basics).
+- `data/notes.json`: the study-note index. `varietyRows` (품종), `regionRows` (산지, `[page, title, subtitle, summary, aliases]`) and `basicRows` (사전, `[page, group, title, summary]`; `page` is the `assets/notes/basics/p-NN.webp` number). Keep one note per subject: a grape lives only in 품종, so 사전 has no grape entries.
 - `photos/NNN.webp` and `photos/NNN-thumb.webp`: the bottle photo for wine id NNN, zero-padded to 3 digits.
 - `assets/notes/<kind>/p-NN.webp`: study-note page images. **Not in the repo yet.** The app keeps each page image hidden until it has actually loaded, so nothing shows (no empty box, no flash) while the files are missing.
 - `tools/add_photo.py`: converts a photo into the two webp files.
@@ -104,11 +104,13 @@ Common:
 
 Bottom tabs: 기록 · 품종 · 산지 · 사전 (4 tabs). The app always opens on 기록. Each tab keeps its own scroll position while the app is open.
 
+Search (통합 검색): every tab has the same search box ("와인, 품종, 산지, 개념 검색"), and it always searches everything at once. While there is a query, the pill row and the tab's card are replaced by "‘…’ 검색 결과" and one card per kind that has hits, in tab order: 와인 기록 (n병), 품종, 산지, 사전. Rows in the results open in place like everywhere else. Clearing the box or switching bottom tabs ends the search.
+
 품종 · 산지 · 사전 (note tabs, `noteTabs` in `index.html`):
-- The pill row holds the groups of that tab with counts: 품종 = 전체 · 레드 품종 · 화이트 품종 (split by the `whiteVarieties` list); 산지 = 전체 · countries in note order (`regionCountry`, from the note page number); 사전 = 전체 · 종류 · 맛과 향 · 대표 품종 · 마시기 · 용어 (`basicGroup`, from the note number 01–50). When a note is added to `data/notes.json`, update those too.
-- The card title is "모든 품종" / "모든 산지" / "모든 개념" or the picked group, the badge is the count, and the description line is the tab intro (or "‘…’ 검색 결과" while searching).
+- The pill row holds the groups of that tab with counts: 품종 = 전체 · 레드 품종 · 화이트 품종 (split by the `whiteVarieties` list); 산지 = 전체 · countries in note order (`regionCountry`, from the note page number); 사전 = 전체 · 종류 · 맛과 향 · 마시기 · 용어 (the `group` in each `basicRows` entry). When a variety or region note is added to `data/notes.json`, update `whiteVarieties` / `regionCountry` too.
+- The card title is "모든 품종" / "모든 산지" / "모든 개념" or the picked group, the badge is the count, and the description line is the tab intro.
 - One level of note ＋ rows. Under 전체, a gray group label (like the year label in 와인 기록) starts each group.
-- Search looks only inside the current tab and the picked group. Switching bottom tabs clears the search and closes the open note.
+- Switching bottom tabs closes the open note.
 - Only one note is open at a time. Opening a note from a wine record switches to its tab, picks its group pill, opens the note and scrolls to it.
 - A collapsed note row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count). Never put the note text in a collapsed row; it shows at the top of the opened row.
 - Opened state: ＋ becomes －, the title color stays the same, only the title row gets `--disclosure-bg` across the full card width, a 3px `--accent` bar runs down the left edge of the opened range, and the title sticks just under the pill row (`--stick`). Tapping a stuck title to fold scrolls back to that title.
