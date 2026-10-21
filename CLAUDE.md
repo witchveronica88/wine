@@ -92,7 +92,8 @@ Both main screens follow the card rules shared with the classic and princess rep
 
 Common:
 - A row of pill tabs under the search box, sticky at the top and scrollable sideways. The selected tab is scrolled into view.
-- Below it, one card (`.fold-card`): a head with the title (`--fs-xl`, bold), a gray pill count badge on the right, a one-line gray description, then a thin line. Under the head, full-width rows separated by thin lines, at least 44px tall.
+- Below it, one card (`.fold-card`): a head with the title (`--fs-l`, bold; same size as the screen title for now), a gray pill count badge on the right, a one-line gray description, then a thin line. Under the head, full-width rows separated by thin lines, at least 44px tall.
+- Nested ＋ rows (none yet; follow this if one is added): the outer row keeps its full-width title background and the 3px accent bar. An inner opened title row gets `--disclosure-bg` only across the inner width (12px past the text on each side, 8px corners), no accent bar, and a 5px `--surface` box-shadow so text doesn't show around it while sticky. The inner row's content is indented 14px with a 2px `--border` guide line on its left.
 - Cards: radius `--card-radius` (16px), padding `--card-pad` (20px), 16px between cards. One accent color. Pill shapes only for tabs, filter chips and badges.
 - Every color is a `:root` token with a dark-mode value.
 
