@@ -114,6 +114,8 @@ Pair each size with its line-height token (`--lh-xl`, `--lh-l`, `--lh-m`, `--lh-
 
 Pages must not scroll sideways at a 360px phone width.
 
+Width: content and the fixed bottom tab bar share one maximum width, `--content-max` (720px, same as classic), centered. Phones fill the screen. Anything fixed or sticky (bottom tab bar, pill-tab row, sticky titles) must line up with the content edges; check at 360px, a 800px portrait tablet and a 1280px landscape tablet.
+
 ### Screen title (화면 맨 위 제목)
 
 - Every screen starts with the same small centered title in `.brand-row`: "와인 노트", `--fs-l` bold, with a thin double-line decoration on both sides. About 12px above and below.
