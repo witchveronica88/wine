@@ -22,7 +22,9 @@ FIELDS = [
     "scores", "buy_verdict", "exchange_rate_date", "info_notes",
     "created_at", "updated_at",
 ]
-REQUIRED = ["id", "name", "wine_type", "consumed_date", "created_at", "updated_at"]
+# consumed_date may be "" for a bottle not drunk yet (보관 중)
+REQUIRED = ["id", "name", "wine_type", "created_at", "updated_at"]
+DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 CAVEAT = re.compile(r"(빈티지\s*자료|기술\s*자료|자료(를)?\s*기준)")
 SEPARATORS = r"[\s·.,()\-_/]"
 
@@ -71,6 +73,11 @@ def main():
         elif wine["id"] in seen:
             problems.append("%s: duplicate id" % label)
         seen.add(wine.get("id"))
+        consumed = wine.get("consumed_date")
+        if consumed and not DATE.match(str(consumed)):
+            problems.append("%s: consumed_date must be YYYY-MM-DD, or \"\" while the bottle is stored" % label)
+        if not consumed and (wine.get("place") or wine.get("rating") is not None or wine.get("my_comment")):
+            warnings.append("%s: has place/rating/comment but no consumed_date (still 보관?)" % label)
         if wine.get("wine_type") not in TYPES:
             problems.append("%s: wine_type must be one of %s" % (label, sorted(TYPES)))
         for key in TASTE:
@@ -103,7 +110,8 @@ def main():
     if problems:
         print("\n".join(problems))
         sys.exit(1)
-    print("ok: %d wines, next id %d" % (len(wines), max(seen) + 1))
+    stored = sum(1 for w in wines if not w.get("consumed_date"))
+    print("ok: %d wines (%d stored), next id %d" % (len(wines), stored, max(seen) + 1))
 
 
 if __name__ == "__main__":

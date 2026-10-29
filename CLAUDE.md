@@ -31,11 +31,11 @@ A record has two kinds of information: what the owner tells you (내 기록) and
 
 ### What the owner sends
 
-Only the photo and the date are needed. The owner can copy this template (it is also in README.md):
+Only the photo is needed. A bottle the owner hasn't drunk yet (a gift, a purchase for later) comes without a date and is stored as 보관 중. The owner can copy this template (it is also in README.md):
 
 ```
 사진: 라벨 앞면 (뒷면이 있으면 같이)
-마신 날: 2026-10-21
+마신 날: 2026-10-21 (아직 안 마셨으면 비워 두기 → 보관 중)
 마신 곳:
 별점: 5점 만점, 0.5 단위
 한줄평:
@@ -64,12 +64,12 @@ Every record has exactly these fields, in this order (`tools/check.py` enforces 
 | | `wine_type` | `red`, `white`, `sparkling`, `rose`, `orange`, `dessert` or `fortified` |
 | | `alcohol_percent`, `volume_ml` | `"13.5%"`, `750` |
 | | `photo_url`, `photo_thumbnail_url` | `photos/NNN.webp`, `photos/NNN-thumb.webp` (made by `tools/add_photo.py`) |
-| 내 기록 (owner) | `consumed_date` | `YYYY-MM-DD`, required |
+| 내 기록 (owner) | `consumed_date` | `YYYY-MM-DD` the day it was drunk, or `""` while the bottle is still kept (보관 중). When a stored bottle is drunk later, fill it in (and place, rating, comment) and bump `updated_at` |
 | | `place` | where it was drunk, short: `JW 메리어트 홍콩 라운지` |
 | | `rating` | stars × 2 (1–10), or `null` |
 | | `my_comment` | the owner's one-line review, in their words |
 | | `personal_notes` | the owner's memo (food, company, situation) |
-| | `price_krw`, `purchase_place` | what the owner paid and where, or `null` / `""` |
+| | `price_krw`, `purchase_place` | what the owner paid and where, or `null` / `""`. A gift is `purchase_place: "선물"` with `price_krw: null` |
 | 시음 노트 (research) | `aroma`, `taste`, `finish`, `food_pairing` | one to three plain sentences each, ending in "~다." No source talk inside the text |
 | | `sweetness`, `acidity`, `tannin`, `body`, `finish_intensity` | 1–5, or `null` |
 | | `basis_note` | one sentence when the tasting text isn't from this vintage: `향·맛은 다른 빈티지 자료 기준이다.` |
@@ -135,6 +135,7 @@ Common:
 
 와인 기록:
 - Tabs are the wine-type filters (전체, 레드, 화이트 …) with counts, plain text with no colored dots.
+- 마심 / 보관: a wine with no `consumed_date` is 보관 중 (`isStored`). Sorted by date, stored bottles come first in their own card labelled "보관 중", then the year cards. In the row, the date spot says "보관" in `--text` bold instead of a gray date (in every sort), so drunk and stored bottles are told apart at a glance. An opened stored wine shows "상태 · 보관 중 · 아직 마시지 않음" where 마신 날 would be. In a note's list of wines, a stored bottle shows "보관 중" (same bold) in the date column and comes first.
 - Sorted by date (최근 마신 순), each year is its own card (`wineCardsHTML`), 16px apart, newest year first. Each card starts with a gray year label row ("2026년"); the first card's label row also holds the sort menu on the right (최근 마신 순 · 이름 순; 평점 높은 순 appears only once some wine has a rating). Other sorts show one card with no year label.
 - Wine rows follow the princess book rows: a small photo (40×56, 4px corners, light shadow), the name (`--fs-m` bold), one gray line (type · vintage · country), and on the right the date with ＋ under it. Rows sit inside the card with dividers, not in separate boxes. No colored type dots anywhere, and no grape list or tasting text in the row.
 - Sorted by date, the row date is month.day (the card already says the year). Other sorts show a short year (26.10.5).
@@ -183,7 +184,7 @@ Every opened wine uses the same order. Skip any part that has no data.
 
 1. Bottle photo (`photo_url`), with pinch zoom.
 2. 내 평가: the owner's ★ rating and `my_comment` on one line (the one-line summary format above). Shown only when the owner gave them. This spot is for the owner's own words; the researched buy verdict lives in 구매 판단.
-3. Basic facts, always visible: short facts in the label-column format above, no dividers. Order: 생산자 · 지역 · 품종 · 도수 · 용량 · 마신 날 · 마신 곳 · 구매 (price · place). 나라 and 빈티지 are left out because the sticky wine row above already shows type · vintage · country. 지역 and 품종 link to their study notes. Short facts only, never prose.
+3. Basic facts, always visible: short facts in the label-column format above, no dividers. Order: 생산자 · 지역 · 품종 · 도수 · 용량 · 마신 날 (or 상태 for a stored bottle) · 마신 곳 · 구매 (price · place). 나라 and 빈티지 are left out because the sticky wine row above already shows type · vintage · country. 지역 and 품종 link to their study notes. Short facts only, never prose.
 4. Inner ＋ rows, closed by default, in this order:
    - 내 메모 (`personal_notes`)
    - 시음 노트: label-column items in this order: 향 · 맛 · 구조 (the 당도 · 산도 · 타닌 · 바디 · 여운 bars) · 여운 · 음식 (`food_pairing`), then `basis_note` as one gray `--fs-s` line

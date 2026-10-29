@@ -1324,6 +1324,9 @@ main.is-searching { --stick: 0px; }
 }
 .drunk-row:active { background: var(--disclosure-bg); }
 .drunk-date { color: var(--dim); font-size: var(--fs-s); line-height: var(--lh-m); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 보관 중 표시: 날짜 자리에 진한 굵은 글씨 (회색 날짜와 구분) */
+.wine-row-date.is-stored,
+.drunk-date.is-stored { color: var(--text); font-weight: 700; }
 .drunk-name { color: var(--accent); font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 400; overflow-wrap: anywhere; }
 
     </style>
@@ -1853,6 +1856,8 @@ function noteMatches(note, needle) {
   const detailText = (note.details || []).map(function (d) { return d[1]; });
   return normalizeText([note.title, note.subtitle || "", note.summary].concat(note.aliases || [], detailText).join(" ")).includes(needle);
 }
+/* 마신 날이 비어 있으면 아직 안 마시고 보관 중인 병이다 */
+function isStored(wine) { return !wine.consumed_date; }
 function filteredWines() {
   const matched = wines.filter(function (wine) {
     return typeFilter === "all" || wine.wine_type === typeFilter;
@@ -1860,9 +1865,9 @@ function filteredWines() {
   matched.sort(function (a, b) {
     if (sortMode === "rating") return (b.rating || 0) - (a.rating || 0) || String(b.updated_at).localeCompare(String(a.updated_at));
     if (sortMode === "name") return a.name.localeCompare(b.name, "ko-KR");
-    const aDate = a.consumed_date || a.updated_at;
-    const bDate = b.consumed_date || b.updated_at;
-    return String(bDate).localeCompare(String(aDate)) || String(b.created_at).localeCompare(String(a.created_at));
+    /* 보관 중인 병이 맨 위, 그다음 최근 마신 순 */
+    if (isStored(a) !== isStored(b)) return isStored(a) ? -1 : 1;
+    return String(b.consumed_date || "").localeCompare(String(a.consumed_date || "")) || String(b.created_at).localeCompare(String(a.created_at));
   });
   return matched;
 }
@@ -1880,7 +1885,7 @@ function wineRowHTML(wine, withYear) {
     + '<span class="wine-thumb">' + thumb + "</span>"
     + '<span class="wine-row-copy"><strong class="wine-row-name">' + esc(wine.name) + "</strong>"
     + '<span class="wine-row-meta">' + esc(meta) + localBadgeHTML(wine) + "</span></span>"
-    + '<span class="wine-row-side">' + (wine.consumed_date ? '<span class="wine-row-date">' + esc(shortDate(wine.consumed_date, withYear)) + "</span>" : "")
+    + '<span class="wine-row-side">' + (isStored(wine) ? '<span class="wine-row-date is-stored">보관</span>' : '<span class="wine-row-date">' + esc(shortDate(wine.consumed_date, withYear)) + "</span>")
     + '<span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span></span>"
     + "</button>"
     + (isOpen ? wineBodyHTML(wine) : "")
@@ -1912,7 +1917,7 @@ function typeFilterHTML() {
   });
   return html + "</div>";
 }
-/* 와인 기록 카드: 최근 마신 순이면 연도마다 카드를 따로 두고, 다른 정렬이면 카드 하나.
+/* 와인 기록 카드: 최근 마신 순이면 보관 중인 병 카드, 그다음 연도마다 카드를 따로 두고, 다른 정렬이면 카드 하나.
    카드 첫 줄은 연도 이름표, 첫 카드의 첫 줄 오른쪽에는 정렬 메뉴 */
 function wineCardsHTML(list) {
   if (list.length === 0) {
@@ -1921,13 +1926,13 @@ function wineCardsHTML(list) {
   }
   const groups = [];
   list.forEach(function (wine) {
-    const year = sortMode === "recent" && wine.consumed_date ? wine.consumed_date.slice(0, 4) : "";
+    const year = sortMode !== "recent" ? "" : isStored(wine) ? "stored" : wine.consumed_date.slice(0, 4);
     const last = groups[groups.length - 1];
     if (last && (sortMode !== "recent" || last.year === year)) last.wines.push(wine);
     else groups.push({ year: year, wines: [wine] });
   });
   return groups.map(function (group, index) {
-    return '<div class="fold-card wine-card"><div class="wine-list-head"><span class="wine-year">' + (group.year ? esc(group.year) + "년" : "") + "</span>"
+    return '<div class="fold-card wine-card"><div class="wine-list-head"><span class="wine-year">' + (group.year === "stored" ? "보관 중" : group.year ? esc(group.year) + "년" : "") + "</span>"
       + (index === 0 ? sortSelectHTML() : "") + "</div>"
       + '<div class="wine-list">' + group.wines.map(function (wine) {
         return '<div class="wine-list-entry">' + wineRowHTML(wine, sortMode !== "recent") + "</div>";
@@ -2113,9 +2118,9 @@ function noteItemHTML(note) {
     /* 마셔 본 와인: 제목 없이 날짜를 맨 앞에 두고, 카드 끝까지 이어진 선으로 나눈다 */
     if (linked.length > 0) {
       html += '<div class="drunk-list">';
-      linked.slice().sort(function (a, b) { return String(b.consumed_date || "").localeCompare(String(a.consumed_date || "")); }).forEach(function (wine) {
+      linked.slice().sort(function (a, b) { return String(b.consumed_date || "9999").localeCompare(String(a.consumed_date || "9999")); }).forEach(function (wine) {
         html += '<button class="drunk-row" data-action="open-linked-wine" data-id="' + esc(wine.id) + '">'
-          + '<span class="drunk-date">' + esc(wine.consumed_date ? formatDate(wine.consumed_date) : "") + "</span>"
+          + '<span class="drunk-date' + (isStored(wine) ? " is-stored" : "") + '">' + esc(isStored(wine) ? "보관 중" : formatDate(wine.consumed_date)) + "</span>"
           + '<span class="drunk-name">' + esc(wine.name) + "</span></button>";
       });
       html += "</div>";
@@ -2195,7 +2200,8 @@ function wineBodyHTML(wine) {
   if (wine.grapes) facts.push(factHTML("품종", linkNotesInText(wine.grapes, "varieties")));
   if (wine.alcohol_percent) facts.push(factHTML("도수", esc(wine.alcohol_percent)));
   if (wine.volume_ml) facts.push(factHTML("용량", esc(wine.volume_ml) + "ml"));
-  if (wine.consumed_date) facts.push(factHTML("마신 날", esc(formatDate(wine.consumed_date))));
+  if (isStored(wine)) facts.push(factHTML("상태", "보관 중 · 아직 마시지 않음"));
+  else facts.push(factHTML("마신 날", esc(formatDate(wine.consumed_date))));
   if (wine.place) facts.push(factHTML("마신 곳", esc(wine.place)));
   if (hasPrice || wine.purchase_place) facts.push(factHTML("구매", esc([hasPrice ? formatWon(wine.price_krw) : "", wine.purchase_place || ""].filter(Boolean).join(" · "))));
   if (facts.length > 0) html += '<dl class="wine-facts">' + facts.join("") + "</dl>";
