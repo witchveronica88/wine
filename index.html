@@ -772,7 +772,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   max-width: var(--content-max);
   min-height: calc(env(safe-area-inset-bottom) + 66px);
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
   padding: 7px 12px calc(env(safe-area-inset-bottom) + 7px);
   transform: translateX(-50%);
@@ -1329,6 +1329,10 @@ main.is-searching { --stick: 0px; }
 .drunk-date.is-stored { color: var(--text); font-weight: 700; }
 .drunk-name { color: var(--accent); font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 400; overflow-wrap: anywhere; }
 
+/* 종류 알약 줄이 없는 와인 화면(보관 병이 한 종류뿐일 때 등)에서는 펼친 제목이 맨 위에 붙는다 */
+.brand-page:not(:has(.type-filter)) { --stick: 0px; }
+/* 날짜 자리가 비면(보관 탭) ＋만 줄 가운데에 */
+.wine-row-side:not(:has(.wine-row-date)) { align-self: center; padding-top: 0; }
     </style>
   </head>
   <body>
@@ -1373,6 +1377,7 @@ function wineMarkHTML(type) {
 function starsHTML(rating) {
   return '<span class="rating" aria-label="평점 5점 만점에 ' + (rating / 2) + '점">' + (rating / 2).toFixed(1) + "</span>";
 }
+const ICON_BOTTLE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2.5h4M10.5 2.5v4.2c0 .6-.3 1.1-.7 1.5A4.5 4.5 0 0 0 8 11.7V20a1.5 1.5 0 0 0 1.5 1.5h5A1.5 1.5 0 0 0 16 20v-8.3a4.5 4.5 0 0 0-1.8-3.5 2 2 0 0 1-.7-1.5V2.5M8 14h8" /></svg>';
 const ICON_GLASS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l-.5 5a4.5 4.5 0 0 1-9 0L7 3ZM12 12.5V20M8 21h8" /></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>';
 const ICON_ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>';
@@ -1677,7 +1682,8 @@ function loadData() {
       sessionStorage.removeItem(RELOAD_KEY);
       const tab = sessionStorage.getItem(TAB_KEY);
       sessionStorage.removeItem(TAB_KEY);
-      if (tab && tab !== "records" && noteCollections[tab] && !notesFailed) { activeTab = tab; notesKind = tab; }
+      if (tab === "stored") activeTab = tab;
+      else if (tab && tab !== "records" && noteCollections[tab] && !notesFailed) { activeTab = tab; notesKind = tab; }
     } catch (e) {}
     if (location.search) history.replaceState(history.state, "", location.pathname);
     render({ restoreScroll: true });
@@ -1691,7 +1697,9 @@ function loadData() {
 
 /* ================= app state ================= */
 let view = "collection"; /* collection | detail | form */
-let activeTab = "records"; /* records | varieties | regions | basics */
+let activeTab = "records"; /* records | stored | varieties | regions | basics */
+/* 기록(마신 와인)과 보관(아직 안 마신 병)은 같은 와인 화면을 쓴다 */
+function isWineTab(tab) { return tab === "records" || tab === "stored"; }
 const tabScroll = {};
 let selectedId = null; /* the wine being edited / deleted (same as wineOpenId while one is open) */
 let wineOpenId = null;
@@ -1700,6 +1708,7 @@ let formMode = null; /* "edit" while the edit form is open */
 let searchText = "";
 let sortMode = "recent";
 let typeFilter = "all";
+const typeFilterBy = {}; /* 기록 · 보관 탭이 각자 고른 종류 알약 */
 let collectionScroll = 1;
 let detailScroll = 1;
 let pendingScroll = 1;
@@ -1858,8 +1867,12 @@ function noteMatches(note, needle) {
 }
 /* 마신 날이 비어 있으면 아직 안 마시고 보관 중인 병이다 */
 function isStored(wine) { return !wine.consumed_date; }
+/* 지금 탭의 와인: 기록은 마신 와인, 보관은 아직 안 마신 병 */
+function tabWines() {
+  return wines.filter(function (wine) { return isStored(wine) === (activeTab === "stored"); });
+}
 function filteredWines() {
-  const matched = wines.filter(function (wine) {
+  const matched = tabWines().filter(function (wine) {
     return typeFilter === "all" || wine.wine_type === typeFilter;
   });
   matched.sort(function (a, b) {
@@ -1873,7 +1886,7 @@ function filteredWines() {
 }
 
 /* 와인 한 줄 (프린세스 책 줄과 같은 짜임): 작은 사진 · 이름 · 회색 한 줄, 오른쪽에 날짜와 ＋. 펼치면 안쪽 내용이 바로 아래에 열린다 */
-function wineRowHTML(wine, withYear) {
+function wineRowHTML(wine, withYear, hideStoredMark) {
   const thumb = wine.photo_thumbnail_url || wine.photo_url
     ? '<img src="' + esc(wine.photo_thumbnail_url || wine.photo_url) + '" loading="lazy" decoding="async" alt="" />'
     : "";
@@ -1885,7 +1898,7 @@ function wineRowHTML(wine, withYear) {
     + '<span class="wine-thumb">' + thumb + "</span>"
     + '<span class="wine-row-copy"><strong class="wine-row-name">' + esc(wine.name) + "</strong>"
     + '<span class="wine-row-meta">' + esc(meta) + localBadgeHTML(wine) + "</span></span>"
-    + '<span class="wine-row-side">' + (isStored(wine) ? '<span class="wine-row-date is-stored">보관</span>' : '<span class="wine-row-date">' + esc(shortDate(wine.consumed_date, withYear)) + "</span>")
+    + '<span class="wine-row-side">' + (isStored(wine) ? (hideStoredMark ? "" : '<span class="wine-row-date is-stored">보관</span>') : '<span class="wine-row-date">' + esc(shortDate(wine.consumed_date, withYear)) + "</span>")
     + '<span class="fold-sign">' + (isOpen ? ICON_MINUS : ICON_PLUS) + "</span></span>"
     + "</button>"
     + (isOpen ? wineBodyHTML(wine) : "")
@@ -1905,12 +1918,13 @@ function localBadgeHTML(wine) {
   return "";
 }
 function typeFilterHTML() {
+  const list = tabWines();
   const counts = {};
-  wines.forEach(function (w) { counts[w.wine_type] = (counts[w.wine_type] || 0) + 1; });
+  list.forEach(function (w) { counts[w.wine_type] = (counts[w.wine_type] || 0) + 1; });
   const kinds = Object.keys(typeLabels).filter(function (key) { return counts[key]; });
   if (kinds.length < 2) return "";
   let html = '<div class="type-filter" role="group" aria-label="종류별 보기">';
-  [["all", "전체", wines.length]].concat(kinds.map(function (key) { return [key, typeLabels[key], counts[key]]; })).forEach(function (item) {
+  [["all", "전체", list.length]].concat(kinds.map(function (key) { return [key, typeLabels[key], counts[key]]; })).forEach(function (item) {
     const active = typeFilter === item[0];
     html += '<button type="button" data-action="type-filter" data-type="' + item[0] + '" aria-pressed="' + active + '" class="' + (active ? "active" : "") + '">'
       + "<span>" + esc(item[1]) + "</span><b>" + item[2] + "</b></button>";
@@ -1920,6 +1934,16 @@ function typeFilterHTML() {
 /* 와인 기록 카드: 최근 마신 순이면 보관 중인 병 카드, 그다음 연도마다 카드를 따로 두고, 다른 정렬이면 카드 하나.
    카드 첫 줄은 연도 이름표, 첫 카드의 첫 줄 오른쪽에는 정렬 메뉴 */
 function wineCardsHTML(list) {
+  /* 보관: 카드 하나, 최근에 들인 병부터. 연도 이름표 · 정렬 메뉴 없음 */
+  if (activeTab === "stored") {
+    if (list.length === 0) {
+      return '<div class="fold-card wine-card"><div class="no-results"><p>보관 중인 와인이 없습니다.</p>'
+        + (typeFilter !== "all" ? '<button class="text-button" data-action="reset-filters">전체 보기</button>' : "") + "</div></div>";
+    }
+    return '<div class="fold-card wine-card"><div class="wine-list">' + list.slice().sort(function (a, b) {
+      return String(b.created_at).localeCompare(String(a.created_at));
+    }).map(function (wine) { return '<div class="wine-list-entry">' + wineRowHTML(wine, false, true) + "</div>"; }).join("") + "</div></div>";
+  }
   if (list.length === 0) {
     return '<div class="fold-card wine-card"><div class="wine-list-head"><span class="wine-year"></span>' + sortSelectHTML() + "</div>"
       + '<div class="no-results"><p>조건에 맞는 와인이 없습니다.</p><button class="text-button" data-action="reset-filters">전체 보기</button></div></div>';
@@ -1988,7 +2012,7 @@ function searchResultsHTML() {
 function refreshSearch() {
   const body = document.getElementById("tab-body");
   if (!body) { render({ keepScroll: true }); return; }
-  body.innerHTML = activeTab === "records" ? recordsBodyHTML() : notesBodyHTML();
+  body.innerHTML = isWineTab(activeTab) ? recordsBodyHTML() : notesBodyHTML();
   const main = appEl.querySelector("main");
   if (main) main.classList.toggle("is-searching", isSearching());
   const clear = document.getElementById("search-clear");
@@ -2027,7 +2051,7 @@ function recordsBodyHTML() {
 
 function bottomNavHTML() {
   let html = '<nav class="bottom-nav" aria-label="주요 메뉴">';
-  [["records", "기록", ICON_GLASS], ["varieties", "품종", ICON_GRAPE], ["regions", "산지", ICON_PIN], ["basics", "사전", ICON_BOOK]].forEach(function (tab) {
+  [["records", "기록", ICON_GLASS], ["stored", "보관", ICON_BOTTLE], ["varieties", "품종", ICON_GRAPE], ["regions", "산지", ICON_PIN], ["basics", "사전", ICON_BOOK]].forEach(function (tab) {
     const on = activeTab === tab[0];
     html += '<button data-action="tab" data-tab="' + tab[0] + '" class="' + (on ? "active" : "") + '"' + (on ? ' aria-current="page"' : "") + ">" + tab[2] + "<span>" + tab[1] + "</span></button>";
   });
@@ -2503,7 +2527,7 @@ function render(options) {
   let html = "";
   if (loadState !== "ready") html = stateHTML();
   else if (view === "form") html = formHTML();
-  else html = activeTab === "records" ? collectionHTML() : notesHTML();
+  else html = isWineTab(activeTab) ? collectionHTML() : notesHTML();
   appEl.innerHTML = html;
   centerActivePills(appEl);
   initPinchZooms(appEl);
@@ -2577,10 +2601,12 @@ function keepWineRowInView(item, underRow) {
 }
 /* 노트 등에서 와인으로 갈 때: 와인 기록 탭으로 바꾸고, 필터를 풀고, 그 와인을 펼쳐서 간다 */
 function openWineInRecords(id) {
-  if (!getWine(id)) return;
-  activeTab = "records";
+  const wine = getWine(id);
+  if (!wine) return;
+  activeTab = isStored(wine) ? "stored" : "records";
   view = "collection";
   typeFilter = "all";
+  typeFilterBy[activeTab] = "all";
   searchText = "";
   wineOpenId = String(id);
   selectedId = wineOpenId;
@@ -2765,9 +2791,11 @@ appEl.addEventListener("click", function (event) {
     const tab = target.getAttribute("data-tab");
     if (tab !== activeTab) {
       tabScroll[activeTab] = window.scrollY;
+      if (isWineTab(activeTab)) typeFilterBy[activeTab] = typeFilter;
       activeTab = tab;
       searchText = "";
-      if (tab !== "records") { notesKind = tab; notesOpenId = null; }
+      if (isWineTab(tab)) typeFilter = typeFilterBy[tab] || "all";
+      else { notesKind = tab; notesOpenId = null; }
       pendingScroll = tabScroll[tab] || 1;
       render({ restoreScroll: true });
     }
