@@ -11,13 +11,13 @@ Browsers may keep the previous `index.html` for up to 10 minutes after a deploy 
 - When the shape of a data file changes, the new `index.html` must still read the old shape, and the old shape should keep working for a while (prefer adding fields over renaming or removing them).
 - Refreshing: browser pull-to-refresh is blocked (`overscroll-behavior: none`) and the home-screen app has no reload button, so the app has its own pull-to-refresh: pulling down at the top and releasing past 72px reloads a fresh page (same `?r=…` URL as below) and keeps the current bottom tab. Coming back to the app after more than a minute re-fetches `wines.json` and `notes.json` quietly and redraws in place when something changed.
 - Old copies of the app: on start and on coming back, the app fetches `index.html?v=…` (no-store) and compares its `<style>` and `<script>` text with its own. If they differ, it reloads a fresh page (at most once per 5 minutes, sessionStorage `wine-stale-reload`). So a phone never stays on an old version for long; you don't need to bump any version number.
-- If loading fails, the app reloads itself once at a fresh URL (`?r=…`, guarded by sessionStorage `wine-fresh-reload`), then shows the error screen. 기록 never waits on `notes.json`: if only the notes fail, records still show and the note tabs say so.
+- If loading fails, the app reloads itself once at a fresh URL (`?r=…`, guarded by sessionStorage `wine-fresh-reload`), then shows the error screen. 기록 never waits on `notes.json`: if only the notes fail, records still show and 사전 says so.
 
 ## Layout
 
 - `index.html`: the whole app (CSS + vanilla JS, no build step). At startup it loads `data/wines.json` and `data/notes.json` with `fetch`.
 - `data/wines.json`: every wine record, shared across devices. This is the source of truth.
-- `data/notes.json`: the study-note index. `varietyRows` (품종, `[title, english, summary, aliases, "레드"|"화이트"]`), `regionRows` (산지, `[page, title, subtitle, summary, aliases, country]`) and `basicRows` (사전, `[page, group, title, summary]`; `page` is the `assets/notes/basics/p-NN.webp` number). Keep one note per subject: a grape lives only in 품종, so 사전 has no grape entries.
+- `data/notes.json`: the study-note index. `varietyRows` (품종, `[title, english, summary, aliases, "레드"|"화이트"]`), `regionRows` (산지, `[page, title, subtitle, summary, aliases, country]`) and `basicRows` (개념, `[page, group, title, summary]`; `page` is the `assets/notes/basics/p-NN.webp` number). All three live in the 사전 tab. Keep one note per subject: a grape lives only in 품종, so 개념 has no grape entries.
 - `photos/NNN.webp` and `photos/NNN-thumb.webp`: the bottle photo for wine id NNN, zero-padded to 3 digits.
 - `assets/notes/<kind>/p-NN.webp`: study-note page images. **Not in the repo yet.** The app keeps each page image hidden until it has actually loaded, so nothing shows (no empty box, no flash) while the files are missing.
 - `tools/add_photo.py`: converts a photo into the two webp files.
@@ -141,28 +141,30 @@ Common:
 - Sorted by date, the row date is month.day (the card already says the year). Other sorts show a short year (26.10.5).
 - Tapping a row opens it in place (first level: full-width title background + accent bar, sticky under the tab row). There is no separate detail page. Only one wine and one inner section are open at a time. A link from a study note switches to 와인 기록, clears the filters and search, opens that wine and scrolls to it.
 
-Bottom tabs: 기록 · 보관 · 품종 · 산지 · 사전 (5 tabs). The app opens on 기록 (a pull-to-refresh keeps the current tab). Each tab keeps its own scroll position while the app is open.
+Bottom tabs: 기록 · 보관 · 사전 (3 tabs; 품종 and 산지 live inside 사전). The app opens on 기록 (a pull-to-refresh keeps the current tab). Each tab keeps its own scroll position while the app is open.
 
-Search (통합 검색): every tab has the same search box ("와인, 품종, 산지, 개념 검색"), and it always searches everything at once. While there is a query, the pill row and the tab's card are replaced by one card per kind that has hits, in tab order, each starting with a gray label ("와인 기록 · 2병", "품종 · 3종", "산지 · 1곳", "사전 · n개"). Search also looks inside the note details. Rows in the results open in place like everywhere else. Clearing the box or switching bottom tabs ends the search.
+Search (통합 검색): every tab has the same search box ("와인, 품종, 산지, 개념 검색"), and it always searches everything at once. While there is a query, the pill row and the tab's card are replaced by one card per kind that has hits, in tab order, each starting with a gray label ("와인 기록 · 2병", "품종 · 3종", "산지 · 1곳", "개념 · n개"). Search also looks inside the note details. Rows in the results open in place like everywhere else. Clearing the box or switching bottom tabs ends the search.
 
-품종 · 산지 · 사전 (note tabs, `noteTabs` in `index.html`):
-- The pill row holds the groups of that tab with counts: 품종 = 전체 · 레드 · 화이트 (split by the `whiteVarieties` list); 산지 = 전체 · countries in note order (`regionCountry`, from the note page number); 사전 = 전체 · 종류 · 맛과 향 · 마시기 · 용어 (the `group` in each `basicRows` entry). The group comes from the row itself (variety color, region country); `whiteVarieties` and `regionCountry` in `index.html` are only fallbacks for an older notes.json.
-- One level of note ＋ rows. Under 전체, a gray group label (like the year label in 와인 기록) starts each group.
+사전 (the note tab; `dictPills`, `noteTabs` in `index.html`). It holds three kinds of notes: 품종 (`varieties`), 산지 (`regions`) and 개념 (`basics`).
+- The pill row, with counts: 품종 · 산지 · 종류 · 맛과 향 · 마시기 · 용어. The last four are the 개념 groups (the `group` in each `basicRows` entry). There is no 전체 pill. The app opens 사전 on 품종.
+- 품종 and 산지 show all their notes, split by gray group labels (like the year label in 와인 기록): 품종 by 레드 · 화이트, 산지 by country in note order. The group comes from the row itself (variety color, region country); `whiteVarieties` and `regionCountry` in `index.html` are only fallbacks for an older notes.json. A 개념 pill shows only that group, with no label.
+- One level of note ＋ rows.
 - Switching bottom tabs closes the open note.
-- Only one note is open at a time. Opening a note from a wine record switches to its tab, picks its group pill, opens the note and scrolls to it.
+- Only one note is open at a time. Opening a note from a wine record switches to 사전, picks its pill (품종, 산지 or the 개념 group), opens the note and scrolls to it.
+- A saved tab from an older page (`varieties`, `regions`, `basics`) opens 사전 on that kind.
 - A collapsed note row shows only the name (`--fs-m`, bold) and a short gray summary (`--fs-s`: English name, record count). Never put the note text in a collapsed row; it shows at the top of the opened row.
 - Opened state: ＋ becomes －, the title color stays the same, only the title row gets `--disclosure-bg` across the full card width, a 3px `--accent` bar runs down the left edge of the opened range, and the title sticks just under the pill row (`--stick`). Tapping a stuck title to fold scrolls back to that title.
-- An opened note shows, in order: the details in the label-column format (see the common format below), starting with the row's `summary` as the first item (label 특징 for 품종 · 산지, 뜻 for 사전), then the wines I've had with this grape or region (only when there are any), newest first. No heading: each row is the date (`--fs-s` gray, 84px column) then the wine name (`--fs-m` regular, `--accent` color so it reads as a link), and rows are divided by lines that run the full card width. No photo, no vintage, no bold, no arrow. The last row's line is the next note's line, so there is never a double line.
-- Note details live in `data/notes.json` → `details.<kind>.<title>` as `[label, text]` pairs. 품종: 향 · 구조 · 산지 · 음식. 산지: 환경 · 품종 · 스타일 · 정보. 사전: 설명 · 정보. Keep labels short (one word, two or three syllables) and don't reuse 특징 or 뜻, which are taken by the summary. One or two plain sentences each, ending in "~다." When adding a note, add its details too.
+- An opened note shows, in order: the details in the label-column format (see the common format below), starting with the row's `summary` as the first item (label 특징 for 품종 · 산지, 뜻 for 개념), then the wines I've had with this grape or region (only when there are any), newest first. No heading: each row is the date (`--fs-s` gray, 84px column) then the wine name (`--fs-m` regular, `--accent` color so it reads as a link), and rows are divided by lines that run the full card width. No photo, no vintage, no bold, no arrow. The last row's line is the next note's line, so there is never a double line.
+- Note details live in `data/notes.json` → `details.<kind>.<title>` as `[label, text]` pairs. 품종: 향 · 구조 · 산지 · 음식. 산지: 환경 · 품종 · 스타일 · 정보. 개념: 설명 · 정보. Keep labels short (one word, two or three syllables) and don't reuse 특징 or 뜻, which are taken by the summary. One or two plain sentences each, ending in "~다." When adding a note, add its details too.
 
 ### Links from a wine to its notes
 
-- In 지역 and 품종 facts the text stays as written, and only the part that names a note is shown in `--accent` color (no bold, no icon). Tapping it opens that note in its tab. Example: "토카이(토카이-헤저여)" → only "토카이" is colored.
+- In 지역 and 품종 facts the text stays as written, and only the part that names a note is shown in `--accent` color (no bold, no icon). Tapping it opens that note in 사전. Example: "토카이(토카이-헤저여)" → only "토카이" is colored.
 - Matching (`matchNotesInText`) checks each note's title, English name and aliases, ignoring spaces, "·", "-", "/" and brackets. When names overlap the longer one wins ("쁘띠 시라" beats "시라"), and each note is linked once, at its first appearance. The same matching decides which wines an opened note lists.
-- Links go both ways and everywhere text is shown (`linkAllNotes`): every 품종, 산지 and 사전 name found in a note's 특징/뜻 and details, and in a wine's 한줄평, 내 메모, 시음 노트, 구매 판단 and 조사 메모, is colored the same way and opens its note. Rules:
+- Links go both ways and everywhere text is shown (`linkAllNotes`): every 품종, 산지 and 개념 name found in a note's 특징/뜻 and details, and in a wine's 한줄평, 내 메모, 시음 노트, 구매 판단 and 조사 메모, is colored the same way and opens its note. Rules:
   - A note never links to itself, and within one block (one opened note, or one opened wine section) each note is linked only at its first appearance, so the text doesn't turn all green.
-  - Overlaps: the longer name wins; at equal length an exact note title beats an alias, then 품종/산지 beat 사전 (so "샴페인" opens the 사전 note, not 샹파뉴 via its alias).
-  - Names shorter than two characters (사전 "색") are never matched.
+  - Overlaps: the longer name wins; at equal length an exact note title beats an alias, then 품종/산지 beat 개념 (so "샴페인" opens the 개념 note, not 샹파뉴 via its alias).
+  - Names shorter than two characters (개념 "색") are never matched.
   - 지역 and 품종 facts keep their own matching above (one kind each).
 - Every grape and region in `data/wines.json` should link. When a new wine brings a grape or region with no note, add the note (row + details) to `data/notes.json`; when it is only a different spelling ("카버네 소비뇽", "비우라"), add an alias instead. Don't add an alias that names a wider area than the note ("토스카나" is not 키안티).
 
