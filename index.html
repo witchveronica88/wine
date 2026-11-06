@@ -1309,7 +1309,8 @@ main.is-searching { --stick: 0px; }
 .wine-mine { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 16px; }
 .wine-mine .rating { margin: 0; color: var(--text); font-size: var(--fs-m); line-height: var(--lh-m); font-weight: 700; }
 .wine-mine p { margin: 0; flex: 1 1 200px; font-size: var(--fs-m); line-height: var(--lh-m); }
-.wine-section-body .wine-verdict { margin: 0 0 10px; }
+.wine-section-body .wine-verdict { margin: 0 0 16px; font-size: var(--fs-l); line-height: var(--lh-l); font-weight: 700; } /* 구매 판단 첫 줄: 얼마면 살 만한지 */
+.verdict-prices + .note-list { margin-top: 12px; }
 /* 펼친 노트 안의 마셔 본 와인: 날짜 · 이름만, 카드 끝까지 이어진 선 */
 .note-content.has-list { padding-bottom: 0; }
 .drunk-list { margin: 16px calc(-1 * var(--card-pad)) 0 calc(3px - var(--card-pad)); }
@@ -1438,13 +1439,13 @@ function buildNotes(src) {
     note.group = row[5] || regionCountry(row[0]) || "기타";
     return note;
   });
-  /* basicRows: [page, group, title, summary]. 예전 모양(basicTitles)도 읽는다 */
+  /* basicRows: [page, group, title, summary, aliases?]. 예전 모양(basicTitles)도 읽는다 */
   const basicRows = src.basicRows || (src.basicTitles || []).map(function (title, i) {
     const n = i + 1;
     return [n + 4, n <= 10 ? "종류" : n <= 20 ? "맛과 향" : n <= 27 ? "" : n <= 38 ? "마시기" : "용어", title, (src.basicSummaries || {})[title] || ""];
   }).filter(function (row) { return row[1]; });
   basicNotes = basicRows.map(function (row) {
-    const note = makeNote("basics", row[0], row[2], "", row[3]);
+    const note = makeNote("basics", row[0], row[2], "", row[3], (row[4] || []).slice());
     note.group = row[1];
     return note;
   });
@@ -2275,9 +2276,18 @@ function wineBodyHTML(wine) {
   }
   if (verdictJudgment) {
     const verdictCtx = linkContext();
+    /* 첫 줄은 값 판단(크게), 나머지 "이름: 내용" 줄은 왼쪽 이름 칸 목록(국내 · 미국 · 예상 …), 이름이 없는 예전 줄은 글머리표 */
+    const verdictPrices = [];
+    const verdictOther = [];
+    verdictReasons.forEach(function (r) {
+      const m = /^([^:：]{1,6}):\s+(.+)$/.exec(r);
+      if (m) verdictPrices.push(factHTML(m[1], linkAllNotes(m[2], verdictCtx)));
+      else verdictOther.push("<li>" + linkAllNotes(r, verdictCtx) + "</li>");
+    });
     sections += wineSectionHTML(wine, "verdict", "구매 판단", "",
       '<p class="wine-verdict">' + linkAllNotes(verdictJudgment, verdictCtx) + "</p>"
-      + (verdictReasons.length > 0 ? '<ul class="note-list">' + verdictReasons.map(function (r) { return "<li>" + linkAllNotes(r, verdictCtx) + "</li>"; }).join("") + "</ul>" : "")
+      + (verdictPrices.length > 0 ? '<dl class="wine-facts verdict-prices">' + verdictPrices.join("") + "</dl>" : "")
+      + (verdictOther.length > 0 ? '<ul class="note-list">' + verdictOther.join("") + "</ul>" : "")
       + (rateDate ? '<p class="wine-rate-date">' + esc(rateDate) + " 환율 기준</p>" : ""));
   }
   if (infoBullets.length > 0) {

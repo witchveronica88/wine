@@ -26,6 +26,9 @@ FIELDS = [
 REQUIRED = ["id", "name", "wine_type", "created_at", "updated_at"]
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 CAVEAT = re.compile(r"(빈티지\s*자료|기술\s*자료|자료(를)?\s*기준)")
+# 구매 판단은 값만 다룬다. 점수 · 평점 이야기는 점수 칸에
+SCORE_TALK = re.compile(r"(Vivino|비비노|점수|평점|평가|\d\s*점|파커|Parker|Suckling|Decanter|디캔터)", re.I)
+VERDICT_LINE = re.compile(r"^• [^:：]{1,6}: .+")
 SEPARATORS = r"[\s·.,()\-_/]"
 
 
@@ -98,6 +101,13 @@ def main():
             problems.append("%s: buy_verdict needs at least the verdict line" % label)
         elif not re.match(r"^• .+다\.$", verdict[0]):
             problems.append("%s: buy_verdict first line must be '• … 다.' (one buy/don't-buy sentence)" % label)
+        elif "원" not in verdict[0]:
+            warnings.append("%s: buy_verdict first line has no KRW price (얼마면 살 만한지)" % label)
+        for line in verdict[1:]:
+            if not VERDICT_LINE.match(line):
+                problems.append("%s: buy_verdict lines after the first must be '• 이름: 내용' (국내 · 미국 · 예상 · 참고 …): %s" % (label, line))
+        if SCORE_TALK.search("\n".join(verdict)):
+            problems.append("%s: buy_verdict talks about scores; keep it to prices (scores go in scores)" % label)
         for key in ("aroma", "taste"):
             if CAVEAT.search(str(wine.get(key) or "")):
                 problems.append("%s: %s mentions its source; put that in basis_note" % (label, key))

@@ -17,7 +17,7 @@ Browsers may keep the previous `index.html` for up to 10 minutes after a deploy 
 
 - `index.html`: the whole app (CSS + vanilla JS, no build step). At startup it loads `data/wines.json` and `data/notes.json` with `fetch`.
 - `data/wines.json`: every wine record, shared across devices. This is the source of truth.
-- `data/notes.json`: the study-note index. `varietyRows` (품종, `[title, english, summary, aliases, "레드"|"화이트"]`), `regionRows` (산지, `[page, title, subtitle, summary, aliases, country]`) and `basicRows` (개념, `[page, group, title, summary]`; `page` is the `assets/notes/basics/p-NN.webp` number). All three live in the 사전 tab. Keep one note per subject: a grape lives only in 품종, so 개념 has no grape entries.
+- `data/notes.json`: the study-note index. `varietyRows` (품종, `[title, english, summary, aliases, "레드"|"화이트"]`), `regionRows` (산지, `[page, title, subtitle, summary, aliases, country]`) and `basicRows` (개념, `[page, group, title, summary, aliases]`, aliases optional; `page` is the `assets/notes/basics/p-NN.webp` number). All three live in the 사전 tab. Keep one note per subject: a grape lives only in 품종, so 개념 has no grape entries.
 - `photos/NNN.webp` and `photos/NNN-thumb.webp`: the bottle photo for wine id NNN, zero-padded to 3 digits. The thumb is what the list row shows (40×56), so it should be mostly label: when the photo shows a lot of table, glasses or hands, crop the thumb tighter around the label (portrait, about 5:7) than the full photo.
 - `assets/notes/<kind>/p-NN.webp`: study-note page images. **Not in the repo yet.** The app keeps each page image hidden until it has actually loaded, so nothing shows (no empty box, no flash) while the files are missing.
 - `tools/add_photo.py`: converts a photo into the two webp files.
@@ -74,7 +74,7 @@ Every record has exactly these fields, in this order (`tools/check.py` enforces 
 | | `sweetness`, `acidity`, `tannin`, `body`, `finish_intensity` | 1–5, or `null` |
 | | `basis_note` | one sentence when the tasting text isn't from this vintage: `향·맛은 다른 빈티지 자료 기준이다.` |
 | 점수 (research) | `scores` | list of `{source, vintage, score, ratingCount, note}`, all strings. `vintage` is a year, `통산` or `미상` |
-| 구매 판단 (research) | `buy_verdict` | lines starting with `• `. Line 1: one sentence on whether it is worth buying and at what price, ending in "~다." Each following line: one piece of evidence (one price with its KRW conversion, or one reason) |
+| 구매 판단 (research) | `buy_verdict` | lines starting with `• `, about prices only: no scores, ratings or reviews (those live in `scores`; `tools/check.py` refuses them). Line 1, shown big: the price verdict with a KRW amount, ending in "~다.": `• 국내 3만원 이하면 살 만하다.`, or what it costs when buying isn't the point: `• 조지아 면세점 값은 2만6천원 정도다.` Each following line is `• 이름: 내용`, one price or one price reason. Names (up to 4 characters, to fit the label column): `국내` (a Korean shop price, with the shop), a country or `유럽` (a foreign shop price, always with KRW: `미국: 35~44달러, 약 4만7천~5만9천원`), `직구`, `면세점`, `가게` / `식당` (abroad), `예상`, `참고`. Prices abroad and in Korea differ, so when no Korean price was found add `예상`: foreign retail × about 1.5–2, written `예상: 국내라면 세금·유통비가 붙어 7만~10만원 선이다.` ("세금·유통비" links to the 개념 note 수입 와인 가격) |
 | | `exchange_rate_date` | `YYYY-MM-DD` the prices were converted at, or `null` |
 | 조사 메모 (research) | `info_notes` | `• ` lines, one fact each (producer story, vineyard, vintage, method, serving). Don't repeat the 병 정보 |
 | system | `created_at`, `updated_at` | ISO timestamps. Bump `updated_at` on every edit |
@@ -193,7 +193,7 @@ Every opened wine uses the same order. Skip any part that has no data.
    - 내 메모 (`personal_notes`)
    - 시음 노트: label-column items in this order: 향 · 맛 · 구조 (the 당도 · 산도 · 타닌 · 바디 · 여운 bars) · 여운 · 음식 (`food_pairing`), then `basis_note` as one gray `--fs-s` line
    - 점수: one divider row per score: the source (`--fs-m` bold) on the left and the score (`--fs-m` bold, accent) on the right, then one gray `--fs-s` line "vintage · count · note". No big numbers.
-   - 구매 판단: the first line of `buy_verdict` (regular weight), the rest as bullets, then a gray "YYYY.MM.DD 환율 기준" line
+   - 구매 판단: the first line of `buy_verdict` in `--fs-l` bold (얼마면 살 만한지), then the `이름: 내용` lines in the label-column short-fact format (`.wine-facts`), then a gray "YYYY.MM.DD 환율 기준" line. A line with no name (older format) shows as a bullet
    - 조사 메모 (`info_notes`) as bullets
    A collapsed inner row shows only its title (no counts or item lists). Inner rows follow the inner-level opened style: full-width background with the outer bar redrawn, sticky under the wine row, content indented 14px behind a 2px gray guide line.
 5. No 수정 · 삭제 buttons. Only a leftover device-only change shows a small "원래 기록으로 되돌리기" or "이 기기에서 지우기" at the bottom.
