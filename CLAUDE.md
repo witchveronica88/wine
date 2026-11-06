@@ -18,7 +18,7 @@ Browsers may keep the previous `index.html` for up to 10 minutes after a deploy 
 - `index.html`: the whole app (CSS + vanilla JS, no build step). At startup it loads `data/wines.json` and `data/notes.json` with `fetch`.
 - `data/wines.json`: every wine record, shared across devices. This is the source of truth.
 - `data/notes.json`: the study-note index. `varietyRows` (품종, `[title, english, summary, aliases, "레드"|"화이트"]`), `regionRows` (산지, `[page, title, subtitle, summary, aliases, country]`) and `basicRows` (개념, `[page, group, title, summary]`; `page` is the `assets/notes/basics/p-NN.webp` number). All three live in the 사전 tab. Keep one note per subject: a grape lives only in 품종, so 개념 has no grape entries.
-- `photos/NNN.webp` and `photos/NNN-thumb.webp`: the bottle photo for wine id NNN, zero-padded to 3 digits.
+- `photos/NNN.webp` and `photos/NNN-thumb.webp`: the bottle photo for wine id NNN, zero-padded to 3 digits. The thumb is what the list row shows (40×56), so it should be mostly label: when the photo shows a lot of table, glasses or hands, crop the thumb tighter around the label (portrait, about 5:7) than the full photo.
 - `assets/notes/<kind>/p-NN.webp`: study-note page images. **Not in the repo yet.** The app keeps each page image hidden until it has actually loaded, so nothing shows (no empty box, no flash) while the files are missing.
 - `tools/add_photo.py`: converts a photo into the two webp files.
 - `tools/check.py`: validates `data/wines.json`. Run it before every commit.
@@ -118,7 +118,7 @@ Width: content and the fixed bottom tab bar share one maximum width, `--content-
 
 ### Screen title (화면 맨 위 제목)
 
-- Every screen starts with the same small centered title in `.brand-row`: "와인 노트", `--fs-l` bold, with a thin double-line decoration on both sides. About 12px above and below.
+- Every screen starts with the same centered title in `.brand-row`: "와인 노트", `--fs-xl` in regular weight (500) with `.04em` letter spacing, and a 3px double line in `--deco` on both sides. About 16px above and 12px below.
 - The title is not sticky. It scrolls away and only the tab row stays at the top.
 - There is no in-app add, edit or delete. The owner asks Claude, and Claude changes `data/wines.json` (and `photos/`) in the repo. An opened wine only shows "원래 기록으로 되돌리기" / "이 기기에서 지우기" for leftover device-only changes from before.
 
@@ -133,6 +133,8 @@ Common:
 - Cards: radius `--card-radius` (16px), padding `--card-pad` (20px), 16px between cards. One accent color. Pill shapes only for tabs and filter chips.
 - Every color is a `:root` token with a dark-mode value.
 
+Colors (색): warm cream like label paper, not cool gray or pure white. `--bg` (#f4efea) and the card `--surface` (#fbf8f5) are almost the same color, so cards are set apart by the thin `--border` line, not by contrast or shadow. Text is a warm near-black (`--text`), secondary text a warm gray (`--dim`). The one accent is a bordeaux wine color (`--accent` #8a2d43; rosé #e59aaa in dark mode) for links, the selected tab and pills, and the opened bar. Body text has `-0.01em` letter spacing. Keep text/accent contrast at 4.5:1 or more on `--bg`, `--surface` and `--disclosure-bg` in both modes.
+
 와인 기록:
 - Tabs are the wine-type filters (전체, 레드, 화이트 …) with counts, plain text with no colored dots.
 - 마심 / 보관: a wine with no `consumed_date` is 보관 중 (`isStored`). 기록 and 보관 are separate bottom tabs that share this screen (`isWineTab`, `tabWines`): 기록 lists only drunk wines, 보관 only stored bottles. Each keeps its own type pill (`typeFilterBy`). The 보관 tab is one card, most recently added first, with no year label, no sort menu and nothing in the row's date spot (the tab already says 보관; ＋ sits in the middle). Where drunk and stored wines appear together (search results), the stored row's date spot says "보관" in `--text` bold. An opened stored wine shows "상태 · 보관 중 · 아직 마시지 않음" where 마신 날 would be. In a note's list of wines, a stored bottle shows "보관 중" (same bold) in the date column and comes first, and tapping it opens the 보관 tab.
@@ -141,7 +143,7 @@ Common:
 - Sorted by date, the row date is month.day (the card already says the year). Other sorts show a short year (26.10.5).
 - Tapping a row opens it in place (first level: full-width title background + accent bar, sticky under the tab row). There is no separate detail page. Only one wine and one inner section are open at a time. A link from a study note switches to 와인 기록, clears the filters and search, opens that wine and scrolls to it.
 
-Bottom tabs: 기록 · 보관 · 사전 (3 tabs; 품종 and 산지 live inside 사전). The app opens on 기록 (a pull-to-refresh keeps the current tab). Each tab keeps its own scroll position while the app is open.
+Bottom tabs: 기록 · 보관 · 사전 (3 tabs; 품종 and 산지 live inside 사전). The selected tab changes only its color to `--accent`; there is no background box behind it. The app opens on 기록 (a pull-to-refresh keeps the current tab). Each tab keeps its own scroll position while the app is open.
 
 Search (통합 검색): every tab has the same search box ("와인, 품종, 산지, 개념 검색"), and it always searches everything at once. While there is a query, the pill row and the tab's card are replaced by one card per kind that has hits, in tab order, each starting with a gray label ("와인 기록 · 2병", "품종 · 3종", "산지 · 1곳", "개념 · n개"). Search also looks inside the note details. Rows in the results open in place like everywhere else. Clearing the box or switching bottom tabs ends the search.
 

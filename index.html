@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#141719" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4efea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#161213" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-title" content="Wine" />
     <link rel="icon" type="image/svg+xml" href="icon.svg" />
     <link rel="apple-touch-icon" href="icon-180.png" />
@@ -25,15 +25,18 @@
   --lh-l: 1.45;
   --lh-m: 1.65;
   --lh-s: 1.5;
-  --bg: #f3f4f6;
-  --surface: #ffffff;
-  --surface-raised: #ffffff;
-  --text: #202528;
-  --dim: #646c72;
-  --border: #d8dde0;
-  --accent: #0d6b6b;
-  --accent-strong: #0d6b6b;
-  --accent-soft: #dcebea;
+  /* 색: 와인 라벨 종이 같은 따뜻한 크림 바탕, 카드는 바탕과 거의 같은 색, 포인트는 보르도 와인색 */
+  --bg: #f4efea;
+  --surface: #fbf8f5;
+  --surface-raised: #fffdfb;
+  --text: #2d2426;
+  --dim: #73676a;
+  --border: #e2d8d2;
+  --deco: #cdbfb6; /* 맨 위 제목 양옆 두 줄 */
+  --shadow: rgba(60, 35, 40, .2);
+  --accent: #8a2d43;
+  --accent-strong: #8a2d43;
+  --accent-soft: #f3e5e4;
   --on-accent: #ffffff;
   --danger: #b42332;
   --wine-red: #782f3a;
@@ -43,8 +46,8 @@
   --wine-orange: #b66732;
   --wine-dessert: #956f24;
   --wine-fortified: #684149;
-  --photo-bg: #e7e3df;
-  --disclosure-bg: #e9f1f1; /* 펼친 제목 줄 배경 */
+  --photo-bg: #ece4de;
+  --disclosure-bg: #f3e9e7; /* 펼친 제목 줄 배경 */
   --radius: 10px;
   --content-max: 720px; /* 내용 · 아래 탭 바 최대 폭 (휴대폰은 화면을 꽉 채운다) */
   --card-radius: 16px;
@@ -61,16 +64,18 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141719;
-    --surface: #1d2225;
-    --surface-raised: #23292c;
-    --text: #f2f4f5;
-    --dim: #abb3b8;
-    --border: #394146;
-    --accent: #62bdbc;
-    --accent-strong: #62bdbc;
-    --accent-soft: #203f40;
-    --on-accent: #0b2526;
+    --bg: #161213;
+    --surface: #1f1a1b;
+    --surface-raised: #272123;
+    --text: #f1ebe8;
+    --dim: #b1a5a6;
+    --border: #3a3134;
+    --deco: #4b4043;
+    --shadow: rgba(0, 0, 0, .5);
+    --accent: #e59aaa;
+    --accent-strong: #e59aaa;
+    --accent-soft: #3c252c;
+    --on-accent: #2a1117;
     --danger: #ff9da8;
     --wine-red: #a14f5c;
     --wine-white: #d4ad5b;
@@ -79,8 +84,8 @@
     --wine-orange: #d98249;
     --wine-dessert: #bd9340;
     --wine-fortified: #98646d;
-    --photo-bg: #292d2f;
-    --disclosure-bg: #22302f;
+    --photo-bg: #2a2325;
+    --disclosure-bg: #2c2225;
   }
 }
 
@@ -101,6 +106,7 @@ body {
   color: var(--text);
   font-size: var(--fs-m);
   line-height: 1.6;
+  letter-spacing: -0.01em;
   word-break: keep-all;
   overscroll-behavior-y: none;
 }
@@ -797,7 +803,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   font-weight: 700;
   cursor: pointer;
 }
-.bottom-nav button.active { color: var(--accent); background: var(--accent-soft); }
+.bottom-nav button.active { color: var(--accent); } /* 고른 탭은 글자색만 바뀐다(배경 상자 없음) */
 .bottom-nav .wine-mark { width: 17px; height: 17px; }
 .bottom-nav svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
@@ -1099,22 +1105,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .notes-kinds { margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; }
 }
 
-/* 화면 맨 위 제목: 작게, 가운데, 양옆 두 줄 장식. 위에 고정하지 않는다 */
+/* 화면 맨 위 제목: 가운데, 보통 굵기에 글자 사이를 띄우고 양옆에 두 줄 장식. 위에 고정하지 않는다 */
 .brand-page, .notes-page { padding-top: env(safe-area-inset-top); }
-.brand-row { display: flex; justify-content: center; margin: 0 0 12px; padding: 12px 0 0; }
+.brand-row { display: flex; justify-content: center; margin: 0 0 12px; padding: 16px 0 0; }
 .brand-row h1 {
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 0;
   color: var(--text);
-  font-size: var(--fs-l);
-  line-height: var(--lh-l);
-  font-weight: 700;
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  font-weight: 500;
   letter-spacing: .04em;
 }
 .brand-row h1::before,
-.brand-row h1::after { content: ""; width: 36px; height: 4px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.brand-row h1::after { content: ""; width: 40px; height: 0; border-top: 3px double var(--deco); }
 
 /* 와인 기록: 노트와 같은 알약 탭 + 카드 한 장. 와인 줄은 가는 선으로 나눈다 */
 .brand-page .collection { padding-top: 0; }
@@ -1155,7 +1161,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   width: 40px;
   height: 56px;
   border-radius: 4px;
-  box-shadow: 0 1px 3px color-mix(in srgb, #000 18%, transparent);
+  box-shadow: 0 1px 3px var(--shadow);
 }
 .wine-card .wine-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center 55%; border-radius: inherit; }
 .wine-row-copy { min-width: 0; display: grid; gap: 2px; }
