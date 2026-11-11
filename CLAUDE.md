@@ -170,6 +170,12 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
   - 지역 and 품종 facts keep their own matching above (one kind each).
 - Every grape and region in `data/wines.json` should link. When a new wine brings a grape or region with no note, add the note (row + details) to `data/notes.json`; when it is only a different spelling ("카버네 소비뇽", "비우라"), add an alias instead. Don't add an alias that names a wider area than the note ("토스카나" is not 키안티).
 
+### Note photos (노트 사진)
+
+- `data/notes.json` has a top-level `images` map: `{ "kind:title": { "url", "credit" } }` (kind is `varieties`, `regions` or `basics`). An opened note shows its photo full-width at the top of the content (`.note-photo`, pinch zoom reused, `pinchZoomHTML(url, url, …)`), with a small credit line underneath: `사진: 작가, 라이선스 · Wikimedia Commons`. A note with no entry shows text only.
+- Photos are Wikimedia Commons hotlinks (500px thumbs from `thumb.wikimedia.org`), not files in the repo — the GitHub connector cannot push binaries. Licenses allowed: CC0, public domain, CC BY, CC BY-SA only (no NC, no ND). Credit is `Artist, License` from the file's extmetadata.
+- Subject rule: varieties get a ripe grape-cluster photo (vine/vineyard only as a fallback, and only when the file is actually that variety); regions get a vineyard landscape of that region; basics get a photo only when it clearly shows the concept — abstract terms (밸런스, 타닌, 부케…) stay photo-less. A wrong photo is worse than none, so leave it out when unsure.
+
 ### 펼친 내용의 공통 서식 (노트 · 와인)
 
 An opened note and an opened wine use the same pieces, so the same kind of text always looks the same:

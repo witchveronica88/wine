@@ -820,6 +820,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   background: #fff;
 }
 .note-pages img + img { margin-top: 10px; }
+.note-photo { margin: 4px 0 14px; }
+.note-photo figcaption { margin-top: 6px; font-size: var(--fs-s); line-height: var(--lh-s); color: var(--dim); }
 .inline-note-link {
   display: inline-flex;
   align-items: flex-start;
@@ -1460,7 +1462,8 @@ function buildNotes(src) {
   allWineNotes = varietyNotes.concat(regionNotes, basicNotes);
   /* details: { kind: { title: [[label, text], …] } } */
   const details = src.details || {};
-  allWineNotes.forEach(function (note) { note.details = (details[note.kind] || {})[note.title] || []; });
+  /* images: { "kind:title": { url, credit } } — Wikimedia Commons hotlink, 사진 없는 항목은 null */
+  allWineNotes.forEach(function (note) { note.details = (details[note.kind] || {})[note.title] || []; note.image = (src.images || {})[note.kind + ":" + note.title] || null; });
   noteCollections = { varieties: varietyNotes, regions: regionNotes, basics: basicNotes };
   noteMatchCache.clear();
   notePatterns = null;
@@ -2206,6 +2209,8 @@ function noteItemHTML(note) {
     + "</button>";
   if (isOpen) {
     html += '<div class="note-content' + (linked.length > 0 ? " has-list" : "") + '" id="note-pages-' + note.id + '">';
+    /* 사진이 있는 항목은 펼친 내용 맨 위에 가로 꽉 찬 사진 + 작게 출처 (핀치 줌 재사용, 없으면 텍스트만) */
+    if (note.image) html += '<figure class="note-photo">' + pinchZoomHTML(note.image.url, note.image.url, note.title + " 사진", "page") + '<figcaption>사진: ' + esc(note.image.credit) + ' · Wikimedia Commons</figcaption></figure>';
     /* 한 줄 설명도 왼쪽 이름 칸 목록의 첫 항목으로 넣는다 (사전은 "뜻", 품종 · 산지는 "특징") */
     const ctx = linkContext(note.id);
     const items = (note.summary ? [[note.kind === "basics" ? "뜻" : "특징", linkAllNotes(note.summary, ctx)]] : [])
