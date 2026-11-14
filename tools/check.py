@@ -15,7 +15,7 @@ TYPES = {"red", "white", "sparkling", "rose", "orange", "dessert", "fortified"}
 TASTE = ["sweetness", "acidity", "tannin", "body", "finish_intensity"]
 # every record has exactly these fields, in this order (see CLAUDE.md "입력 규칙")
 FIELDS = [
-    "id", "name", "producer", "country", "region", "grapes", "vintage", "wine_type", "alcohol_percent", "volume_ml",
+    "id", "name", "name_ko", "producer", "country", "region", "grapes", "vintage", "wine_type", "alcohol_percent", "volume_ml",
     "photo_url", "photo_thumbnail_url",
     "consumed_date", "place", "rating", "my_comment", "personal_notes", "price_krw", "purchase_place",
     "aroma", "taste", "finish", "food_pairing", *TASTE, "basis_note",
@@ -71,6 +71,8 @@ def main():
         for key in REQUIRED:
             if not wine.get(key):
                 problems.append("%s: %s is required" % (label, key))
+        if not wine.get("name_ko"):
+            warnings.append("%s: name_ko (한글 이름) is empty" % label)
         if not isinstance(wine.get("id"), int):
             problems.append("%s: id must be an integer" % label)
         elif wine["id"] in seen:
