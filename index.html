@@ -2282,7 +2282,7 @@ function wineSectionHTML(wine, key, title, summary, inner) {
 }
 function wineBodyHTML(wine) {
   const rateDate = wine.exchange_rate_date ? formatFullDate(wine.exchange_rate_date) : null;
-  /* 구매 판단: 맨 앞의 "적정가: …" · "시세: …" 줄은 기본 정보 칸으로, 나머지 "이름: 내용" 줄은 가격 근거로.
+  /* 구매 판단: 맨 앞의 "시세: …" 줄(예전 데이터의 "적정가: …"도)은 기본 정보 칸으로, 나머지 "이름: 내용" 줄은 가격 근거로.
      예전 모양(첫 줄이 이름 없는 문장)은 그 문장을 "가격" 칸에 둔다 */
   const verdictBullets = textBullets(wine.buy_verdict || "");
   const verdictHeads = [];
@@ -2315,7 +2315,8 @@ function wineBodyHTML(wine) {
   }
 
   const facts = [];
-  /* 적정가(얼마면 살 만한지) · 시세(지금 파는 값)는 펼치자마자 보이도록 기본 정보 맨 앞에 둔다. 근거 값들은 아래 '가격 근거' 줄 */
+  /* 기록은 산 뒤에 남기니, 맨 앞은 내가 산 값(구매)과 지금 파는 값(시세)을 나란히 둔다. 근거 값들은 아래 '가격 근거' 줄 */
+  if (hasPrice || wine.purchase_place) facts.push(factHTML("구매", esc([hasPrice ? formatWon(wine.price_krw) : "", wine.purchase_place || ""].filter(Boolean).join(" · "))));
   const headCtx = linkContext();
   verdictHeads.forEach(function (h) { facts.push(factHTML(h[0], linkAllNotes(h[1], headCtx))); });
   if (wine.producer) facts.push(factHTML("생산자", esc(wine.producer)));
@@ -2326,7 +2327,6 @@ function wineBodyHTML(wine) {
   if (isStored(wine)) facts.push(factHTML("상태", "보관 중 · 아직 마시지 않음"));
   else facts.push(factHTML("마신 날", esc(formatDate(wine.consumed_date))));
   if (wine.place) facts.push(factHTML("마신 곳", esc(wine.place)));
-  if (hasPrice || wine.purchase_place) facts.push(factHTML("구매", esc([hasPrice ? formatWon(wine.price_krw) : "", wine.purchase_place || ""].filter(Boolean).join(" · "))));
   if (facts.length > 0) html += '<dl class="wine-facts">' + facts.join("") + "</dl>";
 
   let sections = "";
