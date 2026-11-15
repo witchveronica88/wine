@@ -101,10 +101,14 @@ def main():
         verdict = [line for line in str(wine.get("buy_verdict") or "").split("\n") if line.strip()]
         if not verdict:
             problems.append("%s: buy_verdict needs at least the verdict line" % label)
-        elif not re.match(r"^• .+다\.$", verdict[0]):
-            problems.append("%s: buy_verdict first line must be '• … 다.' (one buy/don't-buy sentence)" % label)
-        elif "원" not in verdict[0]:
-            warnings.append("%s: buy_verdict first line has no KRW price (얼마면 살 만한지)" % label)
+        elif not re.match(r"^• 적정가: .+", verdict[0]) and not re.match(r"^• 시세: .+", verdict[0]):
+            problems.append("%s: buy_verdict starts with '• 적정가: …' (얼마면 살 만한지) or, when buying isn't the point, '• 시세: …'" % label)
+        else:
+            heads = [line for line in verdict if re.match(r"^• (적정가|시세): ", line)]
+            if verdict[:len(heads)] != heads:
+                problems.append("%s: buy_verdict 적정가 · 시세 lines go first, before the evidence lines" % label)
+            if not any("원" in line for line in heads) and "못 찾" not in "".join(heads):
+                warnings.append("%s: buy_verdict 적정가 · 시세 have no KRW price" % label)
         for line in verdict[1:]:
             if not VERDICT_LINE.match(line):
                 problems.append("%s: buy_verdict lines after the first must be '• 이름: 내용' (국내 · 미국 · 예상 · 참고 …): %s" % (label, line))
