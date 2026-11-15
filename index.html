@@ -2282,17 +2282,15 @@ function wineSectionHTML(wine, key, title, summary, inner) {
 }
 function wineBodyHTML(wine) {
   const rateDate = wine.exchange_rate_date ? formatFullDate(wine.exchange_rate_date) : null;
-  /* 구매 판단: 맨 앞의 "시세: …" · "적정가격: …" 줄(예전 데이터의 "적정가: …"도)은 기본 정보 칸으로, 나머지 "이름: 내용" 줄은 가격 근거로.
+  /* 구매 판단: 맨 앞의 "적정가격: …" 줄(예전 데이터의 "적정가: …"도)만 기본 정보 칸으로, 시세를 비롯한 나머지 "이름: 내용" 줄은 가격 근거로.
      예전 모양(첫 줄이 이름 없는 문장)은 그 문장을 "가격" 칸에 둔다 */
   const verdictBullets = textBullets(wine.buy_verdict || "");
   const verdictHeads = [];
-  while (verdictBullets.length > 0) {
-    const head = /^(적정가격|적정가|시세):\s+(.+)$/.exec(verdictBullets[0]);
-    if (!head) break;
-    verdictHeads.push([head[1], head[2]]);
-    verdictBullets.shift();
+  if (verdictBullets.length > 0) {
+    const head = /^(적정가격|적정가):\s+(.+)$/.exec(verdictBullets[0]);
+    if (head) { verdictHeads.push(["적정가격", head[2]]); verdictBullets.shift(); }
+    else if (!/^[^:：]{1,6}:\s/.test(verdictBullets[0])) verdictHeads.push(["가격", verdictBullets.shift()]);
   }
-  if (verdictHeads.length === 0 && verdictBullets.length > 0) verdictHeads.push(["가격", verdictBullets.shift()]);
   const verdictReasons = verdictBullets;
   const infoBullets = textBullets(wine.info_notes || "");
   const tasteMetrics = [
@@ -2315,7 +2313,7 @@ function wineBodyHTML(wine) {
   }
 
   const facts = [];
-  /* 기록은 산 뒤에 남기니, 맨 앞은 내가 산 값(구매) · 지금 파는 값(시세) · 적정가격을 나란히 둔다. 근거 값들은 아래 '가격 근거' 줄 */
+  /* 기록은 산 뒤에 남기니, 맨 앞은 내가 산 값(구매)과 적정가격을 나란히 둔다. 시세와 근거 값들은 아래 '가격 근거' 줄 */
   if (hasPrice || wine.purchase_place) facts.push(factHTML("구매", esc([hasPrice ? formatWon(wine.price_krw) : "", wine.purchase_place || ""].filter(Boolean).join(" · "))));
   const headCtx = linkContext();
   verdictHeads.forEach(function (h) { facts.push(factHTML(h[0], linkAllNotes(h[1], headCtx))); });
