@@ -104,8 +104,10 @@ def main():
         elif not re.match(r"^• 시세: .+", verdict[0]):
             problems.append("%s: buy_verdict starts with '• 시세: …' (what it sells for now)" % label)
         else:
-            if any(re.match(r"^• (적정가|시세): ", line) for line in verdict[1:]):
-                problems.append("%s: buy_verdict has one 시세 line, first; a buy-at price is a '• 재구매: …' evidence line" % label)
+            if any(re.match(r"^• (적정가|재구매|시세): ", line) for line in verdict[1:]):
+                problems.append("%s: buy_verdict has one 시세 line, first, then at most one '• 적정가격: …' line" % label)
+            if any(line.startswith("• 적정가격: ") for line in verdict[2:]):
+                problems.append("%s: buy_verdict 적정가격 goes right after 시세" % label)
             if "원" not in verdict[0] and "못 찾" not in verdict[0]:
                 warnings.append("%s: buy_verdict 시세 has no KRW price" % label)
         for line in verdict[1:]:
