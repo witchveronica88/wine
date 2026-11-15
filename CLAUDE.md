@@ -187,6 +187,11 @@ An opened note and an opened wine use the same pieces, so the same kind of text 
   - Short facts (`.wine-facts`): the wine's basic facts (생산자, 도수 …), 6px apart.
 - Anything inside an item stays in the right column in regular weight. The wine's 구조 item holds thin bars (6px) with gray `--fs-s` regular names (당도 · 산도 · 타닌 · 바디 · 여운) and gray numbers, so they never look like item labels.
 - **Bullets** (`.note-list`): one fact per bullet, accent markers.
+- **Spacing** (same in an opened wine and an opened note):
+  - 16px from an opened title row to its first content, and 16px between parts (photo, 내 평가, facts, the inner rows).
+  - The bottom depends on what comes last. Text → 20px (`--card-pad`) before the next row's line. A list of rows (the inner ＋ rows, a note's wines) → no extra space: the list runs to the edge, the last row's own 12px padding is the space, and the next row's line closes it, the same rhythm as between rows. An open inner row at the end keeps its 16px inside the item, so the accent bar runs to the line (`.wine-body` is `display: flow-root`).
+  - An opened inner row: 16px above and below its content; the 2px gray guide line runs exactly alongside the content.
+- A note photo and its credit line show only once the photo has loaded (`.note-photo:has(.pinch-image.is-pending)` is hidden), so a missing photo never leaves a lone credit.
 - Same idea, same label in both places: 구조 (note text / wine bars) and 음식 (note text / wine `food_pairing`). Use these names; don't say 페어링 in one place and 음식 in another.
 
 ### 와인 안쪽 내용 (펼친 와인)
