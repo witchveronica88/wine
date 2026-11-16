@@ -176,6 +176,7 @@ Search (통합 검색): every tab has the same search box ("와인, 품종, 산�
 - `data/notes.json` has a top-level `images` map: `{ "kind:title": { "url", "credit" } }` (kind is `varieties`, `regions` or `basics`). An opened note shows its photo full-width at the top of the content (`.note-photo`, pinch zoom reused, `pinchZoomHTML(url, url, …)`), with a small credit line underneath: `사진: 작가, 라이선스 · Wikimedia Commons`. A note with no entry shows text only.
 - Photos are Wikimedia Commons hotlinks (500px thumbs from `thumb.wikimedia.org`), not files in the repo — the GitHub connector cannot push binaries. Licenses allowed: CC0, public domain, CC BY, CC BY-SA only (no NC, no ND). Credit is `Artist, License` from the file's extmetadata.
 - Subject rule: varieties get a ripe grape-cluster photo (vine/vineyard only as a fallback, and only when the file is actually that variety); regions get a vineyard landscape of that region; basics get a photo only when it clearly shows the concept — abstract terms (밸런스, 타닌, 부케…) stay photo-less. A wrong photo is worse than none, so leave it out when unsure.
+- When you need a photo and can't get one yourself (nothing suitable on Wikimedia, or the download is blocked), tell the owner "뮤즈에게 부탁해 주세요" — 뮤즈 is good at finding photos. When the owner sends the photo back, add it following the rules above (size, credit line).
 
 ### 펼친 내용의 공통 서식 (노트 · 와인)
 
